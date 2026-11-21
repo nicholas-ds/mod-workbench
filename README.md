@@ -18,9 +18,9 @@ A permanent status board shows each repo's phase and open tasks as a styled page
 
 ![A status page on the whiteboard](docs/img/whiteboard-status.png)
 
-The agents view lists each orchestrator and its subagents, with state, tool calls and age.
+The overview page lists open boards, agents with their state, and the status of every mod.
 
-![The agents view](docs/img/orchestration.png)
+![The overview page](docs/img/orchestration.png)
 
 ## Requirements
 
