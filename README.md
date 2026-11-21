@@ -6,11 +6,15 @@ Each question has a default answer, so the agents do not wait. It was built for 
 
 ## Screenshots
 
-A permanent status board for one mod. The author reads the whiteboard and answers questions on the right.
+The whiteboard shows whatever an agent needs to ask about. Here it shows a UI mock for a town screen.
 
-![A permanent status board](docs/img/board-mod-status.png)
+![A UI mock on the whiteboard](docs/img/whiteboard-ui-atlas.png)
 
-The agents view. It lists each orchestrator and its subagents, with state, tool calls and age.
+Here it shows a 3D render, with a question about it on the right.
+
+![A 3D render on the whiteboard](docs/img/whiteboard-storehouse.png)
+
+The agents view lists each orchestrator and its subagents, with state, tool calls and age.
 
 ![The agents view](docs/img/orchestration.png)
 
