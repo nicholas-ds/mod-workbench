@@ -12,7 +12,7 @@ The whiteboard shows whatever an agent needs to ask about. Here it shows a UI mo
 
 Here it shows a 3D render, with a question about it on the right.
 
-![A 3D render on the whiteboard](docs/img/whiteboard-storehouse.png)
+![A 3D render on the whiteboard](docs/img/whiteboard-storehouse.jpg)
 
 A permanent status board shows each repo's phase and open tasks as a styled page.
 
@@ -20,7 +20,7 @@ A permanent status board shows each repo's phase and open tasks as a styled page
 
 The overview page lists open boards, agents with their state, and the status of every mod.
 
-![The overview page](docs/img/orchestration.png)
+![The overview page](docs/img/orchestration.jpg)
 
 ## Requirements
 
