@@ -4,6 +4,16 @@ mod-workbench is a local web app for one person. AI agents put boards on it: que
 The human author reads each board in a browser and answers there, not in a chat window.
 Each question has a default answer, so the agents do not wait. It was built for Starfield mod work.
 
+## Screenshots
+
+A permanent status board for one mod. The author reads the whiteboard and answers questions on the right.
+
+![A permanent status board](docs/img/board-mod-status.png)
+
+The agents view. It lists each orchestrator and its subagents, with state, tool calls and age.
+
+![The agents view](docs/img/orchestration.png)
+
 ## Requirements
 
 - Windows. The app uses Windows toast notifications and Windows scripts.
