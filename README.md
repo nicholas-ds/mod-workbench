@@ -14,6 +14,10 @@ Here it shows a 3D render, with a question about it on the right.
 
 ![A 3D render on the whiteboard](docs/img/whiteboard-storehouse.png)
 
+A permanent status board shows each repo's phase and open tasks as a styled page.
+
+![A status page on the whiteboard](docs/img/whiteboard-status.png)
+
 The agents view lists each orchestrator and its subagents, with state, tool calls and age.
 
 ![The agents view](docs/img/orchestration.png)
