@@ -1,0 +1,77 @@
+<!doctype html>
+<!-- Whiteboard text item. Copy this file, replace the content, keep the style block. Clay look is mandatory for any text page (author, 2026-11-08).
+     Rules: one self-contained file. Inline CSS only. No scripts, no network, no external fonts,
+     images only as data: URIs (the board sandbox blocks everything else).
+     Colors come from mod-workbench/web/tokens.css. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Board text</title>
+<style>
+  :root {
+    --void: #1e1724; --card: #ebe5cb; --ink: #1e1724; --ink-dim: #2c2038;
+    --teal: #62ba9e; --sienna: #d27648; --gold: #deb845; --blue: #47a4d3;
+    --well: rgba(30, 23, 36, 0.14);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 28px 34px; background: var(--card); color: var(--ink);
+         font: 700 17px/1.55 Nunito, "Segoe UI", system-ui, sans-serif; }
+  h1 { margin: 0 0 4px; font: 800 28px/1.15 "Baloo 2", "Segoe UI", system-ui, sans-serif; }
+  h2 { margin: 26px 0 8px; font: 800 20px/1.2 "Baloo 2", "Segoe UI", system-ui, sans-serif; }
+  .kicker { font: 500 12px/1 "DM Mono", Consolas, monospace; letter-spacing: 0.14em;
+            text-transform: uppercase; color: var(--ink-dim); margin-bottom: 8px; }
+  p, ul, ol { margin: 0 0 12px; }
+  ul, ol { padding-left: 22px; }
+  .callout { margin: 16px 0; padding: 14px 18px; background: var(--well); border-radius: 22px;
+             border-left: 8px solid var(--teal); }
+  .callout.warn { border-left-color: var(--sienna); }
+  .callout b { display: block; font: 500 12px "DM Mono", Consolas, monospace;
+               letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; }
+  th { text-align: left; font: 500 12px "DM Mono", Consolas, monospace; letter-spacing: 0.08em;
+       text-transform: uppercase; color: var(--ink-dim); padding: 6px 10px; }
+  td { padding: 10px; border-top: 3px dotted var(--well); overflow-wrap: anywhere; }
+  .tag { display: inline-block; white-space: nowrap; padding: 1px 12px; border-radius: 14px; background: var(--gold);
+         font: 500 12px "DM Mono", Consolas, monospace; }
+  code { font: 500 14px "DM Mono", Consolas, monospace; background: var(--well);
+         padding: 0 6px; border-radius: 8px; }
+  /* workbench-base-style v1: keep this marker. board check rejects html items without it.
+     Calm colors: cream page, cream cards, palette hues only as 25% tints or thin edges. No solid saturated fills. */
+  :root { --lit: radial-gradient(120% 90% at 22% 12%, rgba(255,255,255,.35), transparent 58%);
+          --lift: 0 6px 12px rgba(30,23,36,.18), 0 2px 3px rgba(30,23,36,.14), inset 0 -4px 7px rgba(30,23,36,.08), inset 0 3px 5px rgba(255,255,255,.6);
+          --page: color-mix(in srgb, var(--card) 80%, var(--teal)); }
+  body { background: var(--page); }
+  .callout, .card, .box, .node { box-shadow: var(--lift); border-left: 0; background: var(--lit), var(--card);
+                    border-radius: 30px 36px 32px 38px / 36px 30px 38px 32px; padding: 16px 22px; }
+  .callout, .card, .box, .node { margin: 0 0 22px; } /* cards need a gap or their shadows and round corners merge into one blob */
+  .tint-sienna { background: var(--lit), color-mix(in srgb, var(--sienna) 24%, var(--card)); }
+  .tint-teal { background: var(--lit), color-mix(in srgb, var(--teal) 28%, var(--card)); }
+  .tint-gold { background: var(--lit), color-mix(in srgb, var(--gold) 30%, var(--card)); }
+  .tint-blue { background: var(--lit), color-mix(in srgb, var(--blue) 24%, var(--card)); }
+  .edge-sienna { border-bottom: 5px solid var(--sienna); } .edge-teal { border-bottom: 5px solid var(--teal); }
+  .callout.warn { background: var(--lit), color-mix(in srgb, var(--sienna) 24%, var(--card)); }
+</style>
+</head>
+<body>
+  <div class="kicker">Proposal</div>
+  <h1>Title of this page</h1>
+  <p>One or two sentences that say what the author looks at and what you need from them.</p>
+
+  <div class="callout">
+    <b>Vanilla basis</b>
+    Name the closest vanilla menu, asset or mechanic here.
+  </div>
+
+  <h2>Options</h2>
+  <table>
+    <tr><th>Option</th><th>What it is</th><th>Kind</th></tr>
+    <tr><td>Watchtower</td><td>Vanilla tall structure. <code>OutpostPI_Structure_Watchtower01</code></td><td><span class="tag">vanilla</span></td></tr>
+    <tr><td>Patched habs</td><td>Several Four Wall Habs joined.</td><td><span class="tag">new</span></td></tr>
+  </table>
+
+  <div class="callout warn">
+    <b>Risk</b>
+    Say what could go wrong and what you did about it.
+  </div>
+</body>
+</html>

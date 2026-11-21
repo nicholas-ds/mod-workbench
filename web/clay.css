@@ -1,0 +1,154 @@
+/* Clay shapes. Built only from tokens.css. See docs/design-standard.md. */
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--clay-grain), radial-gradient(90% 70% at 30% 0%, rgba(255, 255, 255, 0.18), transparent 60%), var(--color-surface);
+  background-attachment: fixed;
+  color: var(--color-text);
+  font: 700 var(--font-size-body) / 1.5 var(--font-body);
+}
+
+.clay {
+  background: var(--clay-grain), var(--clay-lit), var(--clay-color, var(--clay-card));
+  color: var(--color-ink);
+  box-shadow: var(--clay-shadow);
+  border-radius: 46px 54px 50px 44px / 52px 46px 54px 48px;
+}
+
+.clay-small {
+  background: var(--clay-grain), var(--clay-lit), var(--clay-color, var(--clay-card));
+  color: var(--color-ink);
+  box-shadow: var(--clay-shadow-small);
+  border-radius: 30px 36px 32px 38px / 36px 30px 38px 32px;
+}
+
+.clay-well {
+  background: var(--clay-grain), var(--clay-well);
+  box-shadow: var(--clay-dent);
+  border-radius: 30px 26px 32px 28px / 28px 32px 26px 30px;
+  color: var(--color-ink);
+}
+
+/* Text fields: light field, dark text. Never dark text on a dark well. */
+.clay-field {
+  appearance: none;
+  border: 0;
+  outline: none;
+  background: var(--clay-field);
+  color: var(--color-ink);
+  box-shadow: inset 3px 4px 9px rgba(30, 23, 36, 0.22), inset -2px -2px 6px rgba(255, 255, 255, 0.4);
+  border-radius: 28px 32px 26px 34px / 32px 26px 34px 28px;
+  padding: var(--space-md) var(--space-lg);
+  font: 700 var(--font-size-body) var(--font-body);
+}
+.clay-field:focus-visible { box-shadow: inset 3px 4px 9px rgba(30, 23, 36, 0.22), 0 0 0 3px var(--accent, var(--color-text)); }
+.clay-field::placeholder { color: var(--color-ink-dim); opacity: 1; }
+
+/* Keyboard keys: puffy cream cap, dark text. */
+.clay-key {
+  display: inline-block;
+  background: var(--clay-card);
+  color: var(--color-ink);
+  border-radius: 12px 14px 12px 15px / 14px 12px 15px 12px;
+  box-shadow: 0 3px 6px rgba(30, 23, 36, 0.32), inset 0 -4px 6px rgba(30, 23, 36, 0.18), inset 0 3px 5px rgba(255, 255, 255, 0.65);
+  padding: 2px 10px;
+  font: 800 var(--font-size-hint) var(--font-mono);
+}
+
+.clay-button {
+  border: 0;
+  cursor: pointer;
+  padding: var(--space-md) var(--space-xl);
+  font: 800 var(--font-size-body) var(--font-body);
+  border-radius: 36px 42px 38px 44px / 42px 36px 44px 38px;
+  background: var(--clay-grain), var(--clay-lit), var(--clay-color, var(--clay-card));
+  color: var(--color-ink);
+  box-shadow: var(--clay-shadow-small);
+}
+/* No translate on hover or press: it moves the hit area off a pointer near the edge and the click is lost. */
+.clay-button:hover { transform: rotate(-1deg); }
+.clay-button:active { box-shadow: var(--clay-dent); }
+.clay-button[aria-pressed="true"] { --clay-color: var(--color-action); box-shadow: var(--clay-dent); }
+.clay-quiet { --clay-color: var(--clay-card); }
+.clay-button:focus-visible { outline: 4px solid var(--color-text); outline-offset: 3px; }
+.clay-action { --clay-color: var(--accent, var(--color-action)); }
+
+/* Surfaces set their own accent: the complement of their color. */
+.on-void { --accent: var(--accent-on-void); }
+.on-sienna { --clay-color: var(--clay-questions); --accent: var(--accent-on-sienna); }
+.on-teal { --clay-color: var(--clay-whiteboard); --accent: var(--accent-on-teal); }
+.on-verdigris { --clay-color: var(--clay-rail); --accent: var(--accent-on-verdigris); }
+.clay-alert { --clay-color: var(--color-alert); }
+
+/* Stop-motion wobble: three held poses, one short burst. It plays only on
+   interaction (hover, press, or the .wobble-once class), never constantly. */
+@keyframes wobble {
+  0% { transform: rotate(var(--tilt, 0deg)) translate(0, 0); }
+  33% { transform: rotate(calc(var(--tilt, 0deg) + 0.3deg)) translate(1px, -1px); }
+  66% { transform: rotate(calc(var(--tilt, 0deg) - 0.3deg)) translate(-1px, 1px); }
+  100% { transform: rotate(var(--tilt, 0deg)) translate(0, 0); }
+}
+.wobble-once { animation: wobble var(--wobble-duration) steps(1) 1; }
+.clay-button:hover, .clay-key:hover, kbd:hover,
+.opt:hover, .rail span:hover,
+.board-rail-row:hover, .board-rail-chip:hover { animation: wobble var(--wobble-duration) steps(1) 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wobble-once, .clay-button:hover, .clay-key:hover, kbd:hover,
+  .opt:hover, .rail span:hover,
+  .board-rail-row:hover, .board-rail-chip:hover { animation: none; }
+  .clay-button:hover { transform: none; }
+}
+
+/* More menu panel in the page header: holds the design button, the versions chip and the all-tasks tab. */
+.more-panel {
+  --clay-color: var(--clay-card);
+  position: fixed; top: 72px; right: 24px; z-index: 6; display: grid; gap: var(--space-md);
+  padding: var(--space-lg);
+}
+.more-panel[hidden] { display: none; }
+
+/* Question rail: boards with an open question, left of the board page (web/question_rail.js).
+   The rail takes the first column, the board split the second; its spacing is a margin,
+   so a hidden rail leaves no gap behind. */
+.board-frame { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+.board-frame > .board-split { grid-column: 2; }
+.board-rail {
+  width: clamp(180px, 14vw, 240px); margin-right: 22px; padding: 14px 12px;
+  display: grid; gap: 10px; align-content: start;
+}
+.board-rail[hidden] { display: none; }
+.board-rail-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.board-rail-chip {
+  border: 0; cursor: pointer; padding: 2px 12px; font: 800 12px var(--font-body); color: var(--color-ink);
+  background: var(--clay-grain), var(--clay-lit), var(--clay-card); box-shadow: var(--clay-shadow-small);
+  border-radius: 14px 17px 13px 18px / 17px 13px 18px 14px;
+}
+.board-rail-chip[aria-pressed="true"] { background: var(--clay-grain), var(--clay-lit), var(--accent); box-shadow: var(--clay-dent); }
+.board-rail-list { display: grid; gap: 10px; }
+.board-rail-row {
+  border: 0; cursor: pointer; text-align: left; color: var(--color-ink);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start;
+  gap: var(--space-xs) var(--space-md);
+  padding: 10px 14px; font: 800 14px/1.3 var(--font-body);
+  background: var(--clay-grain), var(--clay-lit), var(--clay-card); box-shadow: var(--clay-shadow-small);
+  border-radius: 22px 28px 24px 30px / 28px 22px 30px 24px;
+}
+.board-rail-row.is-selected { background: var(--clay-grain), var(--clay-lit), var(--clay-card); box-shadow: var(--clay-shadow-small); outline: 2px solid var(--clay-gold); outline-offset: -2px; }
+.board-rail-row.is-selected .board-rail-title { font-weight: 900; }
+.board-rail-title { font: inherit; overflow-wrap: anywhere; }
+.board-rail-mark {
+  grid-row: 1; grid-column: 2; width: 20px; height: 20px; border-radius: 50%;
+  display: grid; place-items: center; font: 800 12px var(--font-body);
+  background: var(--clay-grain), var(--clay-gold); box-shadow: var(--clay-shadow-small); color: var(--color-ink);
+}
+.board-rail-mod { grid-column: 1 / -1; font: 500 11px var(--font-mono); color: var(--color-ink-dim); overflow-wrap: anywhere; }
+.board-rail-row:focus-visible, .board-rail-chip:focus-visible { outline: 4px solid var(--color-text); outline-offset: 3px; }
+@media (max-width: 760px) {
+  .board-frame { grid-template-columns: minmax(0, 1fr); }
+  .board-frame > .board-split { grid-column: 1; }
+  .board-rail { display: none; }
+}
+
+/* Attach control wrapper: its button stays the grid or flex item of the host. */
+.attach-wrap { display: contents; }

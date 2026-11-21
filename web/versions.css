@@ -1,0 +1,11 @@
+/* Versions chip and panel in the page header: built only from tokens.css and clay.css. */
+.versions-chip { --clay-color: var(--clay-gold); }
+.versions-panel {
+  --clay-color: var(--clay-card);
+  position: fixed; top: 72px; right: 24px; z-index: 6; display: grid; gap: var(--space-md);
+  width: min(420px, calc(100vw - 32px)); padding: var(--space-lg) var(--space-xl);
+}
+.versions-row { display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: baseline; color: var(--color-ink); font-weight: 700; }
+.versions-row.is-update { font-weight: 800; }
+.versions-row.is-update::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--clay-tag); box-shadow: var(--clay-shadow-small); align-self: center; }
+.versions-note { flex-basis: 100%; font: 500 var(--font-size-report) var(--font-mono); color: var(--color-ink-dim); }

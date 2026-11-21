@@ -1,0 +1,25 @@
+/* Agent working pill: top bar notice and chat thread. Colors from tokens.css. */
+.working-slot { display: contents; }
+.working-pill { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: default;
+  --clay-color: color-mix(in srgb, var(--clay-gold) 75%, var(--clay-card)); animation: working-blink 1.4s ease-in-out infinite; }
+.working-pill.is-done { animation: none; }
+button.working-pill { cursor: pointer; }
+.agents-pill { --clay-color: color-mix(in srgb, var(--clay-blue) 55%, var(--clay-card)); }
+.working-in-thread { pointer-events: none; }
+.working-pill.ping::after { content: ""; position: absolute; inset: -4px; border-radius: inherit;
+  border: 3px solid var(--clay-gold); animation: working-ring 1.4s ease-out infinite; pointer-events: none; }
+.working-pill.is-done.ping::after { animation-iteration-count: 1; }
+.working-in-thread { margin: var(--space-md) 0; align-self: flex-start; }
+.working-dots { display: inline-flex; flex-direction: row; align-items: center; gap: 4px; }
+.working-dots i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--color-ink); animation: working-dot 1.2s infinite; }
+.working-dots i:nth-child(2) { animation-delay: 0.2s; }
+.working-dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes working-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@keyframes working-ring { 0% { opacity: 0.9; transform: scale(0.92); } 100% { opacity: 0; transform: scale(1.25); } }
+@keyframes working-dot { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .working-pill, .working-pill.ping::after, .working-dots i { animation: none; }
+}
+
+/* Two pills share the top bar: keep every top bar item on one line. */
+.shell h1, .shell .stage-tab, .shell .clay-button { white-space: nowrap; flex-shrink: 0; }

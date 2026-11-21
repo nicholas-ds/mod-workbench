@@ -1,0 +1,6 @@
+/* Look menu panel in the page header: built only from tokens.css and clay.css. */
+.look-panel {
+  --clay-color: var(--clay-card);
+  position: fixed; top: 72px; right: 24px; z-index: 6; display: grid; gap: var(--space-md);
+  padding: var(--space-lg);
+}

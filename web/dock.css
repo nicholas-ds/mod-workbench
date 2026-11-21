@@ -1,0 +1,99 @@
+/* Message dock: fixed bar at the bottom of every screen. Built only from tokens.css and clay.css. */
+.message-dock {
+  --clay-color: var(--clay-rail); --accent: var(--accent-on-verdigris);
+  position: fixed; right: 24px; bottom: 24px; z-index: 5; box-sizing: border-box;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-lg) var(--space-lg);
+  width: min(460px, calc(100vw - 32px)); max-height: 92vh; overflow: hidden;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  padding: var(--space-lg) var(--space-xl) 20px;
+  background: var(--clay-grain), var(--clay-lit), var(--clay-color);
+  color: var(--color-ink); box-shadow: var(--clay-shadow-small);
+  border-radius: 34px 40px 36px 42px / 40px 34px 42px 36px;
+}
+.message-dock.is-collapsed { bottom: 17px; display: block; width: auto; height: auto; padding: 0; overflow: visible; background: none; box-shadow: none; }
+.message-dock.is-collapsed > :not(.dock-head) { display: none; }
+.message-dock:not(.is-collapsed) { animation: wobble var(--wobble-duration) steps(1) 1; }
+@media (prefers-reduced-motion: reduce) { .message-dock:not(.is-collapsed) { animation: none; } }
+.dock-head { grid-column: 1 / -1; cursor: grab; touch-action: none; display: flex; align-items: center; }
+.message-dock.is-collapsed :is(.session-chip, .context-meter) { display: none; }
+.dock-head { gap: var(--space-md); }
+.dock-head .dock-toggle { white-space: nowrap; }
+.dock-head :is(.session-chip, .context-meter) { white-space: nowrap; font-size: calc(var(--font-size-report) * 0.78); }
+.dock-head .context-meter { font-size: calc(var(--font-size-report) * 0.94); }
+.dock-head:active { cursor: grabbing; }
+.drag-pips { display: inline-flex; gap: var(--space-sm); margin-right: var(--space-sm); }
+.drag-pips i { display: block; width: 7px; height: 7px; border-radius: 40% 50% 45% 55% / 50% 40% 55% 45%; background: var(--clay-well); box-shadow: var(--clay-dent-soft); }
+.dock-head:hover .drag-pips i { animation: wobble var(--wobble-duration) steps(1) 1; }
+@media (prefers-reduced-motion: reduce) { .dock-head:hover .drag-pips i { animation: none; } }
+.message-dock.is-collapsed .drag-pips { display: none; }
+.dock-toggle {
+  border: 0; cursor: pointer; padding: 0; touch-action: none;
+  background: none;
+}
+.message-dock.is-collapsed .dock-toggle {
+  padding: var(--space-md) var(--space-xl); color: var(--color-ink); font-weight: 800; cursor: pointer;
+  background: var(--clay-grain), var(--clay-lit), var(--clay-color); box-shadow: var(--clay-shadow-small);
+  border-radius: 34px 40px 36px 42px / 40px 34px 42px 36px;
+}
+.dock-chips { display: flex; flex-wrap: wrap; gap: var(--space-sm); grid-column: 1 / -1; }
+.dock-chip {
+  padding: 2px 12px; font: 500 var(--font-size-report) var(--font-mono); color: var(--color-ink);
+  background: var(--clay-grain), var(--clay-tag); box-shadow: var(--clay-shadow-small);
+  border-radius: 12px 14px 12px 15px / 14px 12px 15px 12px;
+}
+.dock-input { resize: none; min-height: 4.6em; max-height: 8em; width: 100%; box-sizing: border-box; }
+.dock-send { --clay-color: var(--accent); padding: var(--space-md) var(--space-xl); }
+.dock-actions { display: flex; flex-direction: column; justify-content: center; align-items: stretch; align-self: center; gap: var(--space-md); }
+.dock-thread {
+  grid-column: 1 / -1; display: grid; gap: var(--space-sm); overflow-y: auto; min-height: 0; max-height: 40vh;
+  font-size: var(--font-size-hint); padding: var(--space-lg) var(--space-xl) var(--space-xl);
+  background: var(--clay-grain), var(--clay-well); box-shadow: var(--clay-dent);
+  border-radius: 30px 26px 32px 28px / 28px 32px 26px 30px;
+}
+.dock-thread:empty { display: none; }
+.dock-exchange { display: flex; flex-direction: column; gap: var(--space-md); }
+.dock-message, .dock-reply {
+  width: fit-content; padding: var(--space-md) var(--space-lg); overflow-wrap: anywhere; white-space: pre-wrap;
+  color: var(--color-ink); box-shadow: var(--clay-shadow-raised);
+  border-radius: 18px 22px 18px 24px / 22px 18px 24px 18px;
+}
+.dock-reply.is-error { background: var(--clay-grain), var(--clay-questions); }
+.dock-notice { align-self: center; font: 500 var(--font-size-report) var(--font-mono); color: var(--color-ink); }
+.dock-exchange .dock-chip { align-self: flex-start; }
+.dock-message { align-self: flex-end; max-width: 80%; background: var(--clay-grain), var(--clay-tag); }
+.dock-reply { align-self: flex-start; max-width: 86%; background: var(--clay-grain), var(--clay-card); }
+
+/* Flash message: one confirmation or failure line at the top of the page. */
+.flash {
+  position: fixed; top: 16px; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 10;
+  max-width: min(90vw, 720px); padding: var(--space-md) var(--space-xl);
+  font: 800 var(--font-size-hint) var(--font-body); color: var(--color-ink);
+  background: var(--clay-grain), var(--clay-lit), var(--clay-green); box-shadow: var(--clay-shadow-small);
+  border-radius: 28px 34px 30px 36px / 34px 28px 36px 30px;
+}
+.flash:empty { display: none; }
+.flash.is-failed { background: var(--clay-grain), var(--clay-lit), var(--clay-questions); }
+.dock-target { grid-column: 1; justify-self: start; padding: var(--space-sm) var(--space-lg); font-size: var(--font-size-hint); }.dock-grip {
+  position: absolute; right: 12px; bottom: 12px; width: 22px; height: 22px; cursor: nwse-resize; touch-action: none;
+  background: var(--clay-grain), var(--clay-lit), var(--clay-tag); box-shadow: var(--clay-shadow-small);
+  border-radius: 40% 50% 45% 55% / 50% 40% 55% 45%;
+}
+.message-dock.is-collapsed .dock-grip { display: none; }
+.dock-grip { transition: transform 120ms ease-out, box-shadow 120ms ease-out; }
+.dock-grip:hover { transform: translateY(-1px) scale(1.08); animation: wobble var(--wobble-duration) steps(1) 1; }
+.dock-grip:active, .dock-grip.is-resizing { transform: scale(0.94); box-shadow: var(--clay-dent-soft); animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .dock-grip { transition: none; }
+  .dock-grip:hover { animation: none; }
+}
+
+/* Target picker menu: opens on the body so the dock cannot clip it. */
+.target-menu {
+  --clay-color: var(--clay-rail);
+  position: fixed; z-index: 8; display: grid; gap: var(--space-md); padding: var(--space-lg);
+  max-height: 60vh; overflow-y: auto; border-radius: 28px 32px 30px 34px / 32px 28px 34px 30px;
+}
+.target-option { padding: var(--space-sm) var(--space-xl); font-size: var(--font-size-hint); text-align: left; }
+
+.dock-permission { display: flex; flex-direction: column; gap: var(--space-sm); }
+.dock-permission-actions { display: flex; gap: var(--space-sm); }

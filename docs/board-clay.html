@@ -1,0 +1,120 @@
+<title>Workbench Claymation Style</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&family=DM+Mono:wght@500&display=swap">
+<style>
+/* Layout: a modeled table surface holds hand-shaped clay lumps. Rail left, whiteboard and questions side by side. Each lump has an uneven outline, grain, a lit top-left and a contact shadow. A short 3-frame wobble plays once when you hover or press a lump. */
+:root{
+--table:#1e1724;--page-fg:#ffedad;--page-mute:#b9a8c8;--ink:#1e1724;--ink-mute:#2c2038;
+--c-rail:color-mix(in srgb,#5ccc6e 91%,#000);--c-white:color-mix(in srgb,#61bfa1 91%,#000);--c-q:color-mix(in srgb,#d9733f 91%,#000);--c-btn:color-mix(in srgb,#e6ba3b 91%,#000);--c-btn-fg:#1e1724;--c-well:#1e17243a;--c-tag:color-mix(in srgb,#f2b34d 91%,#000);--c-plum:color-mix(in srgb,#66d9f2 91%,#000);--c-teal:color-mix(in srgb,#91d94d 91%,#000);--c-card:color-mix(in srgb,#ffedad 91%,#000);--a-rail:color-mix(in srgb,#cc5cba 91%,#000);--a-q:color-mix(in srgb,#3fa5d9 91%,#000);--a-void:color-mix(in srgb,#91d94d 91%,#000);
+--lump:0 12px 0 -4px rgba(0,0,0,.35),0 20px 28px rgba(0,0,0,.55),inset 0 -10px 14px rgba(20,10,30,.28),inset 0 8px 12px rgba(255,255,255,.26);color-scheme:dark;
+--grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.12  0 0 0 0 0.09  0 0 0 0 0.14  0 0 0 .55 -.12'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+--lit:radial-gradient(120% 90% at 22% 12%,rgba(255,255,255,.42),transparent 58%);
+--lump-s:0 8px 14px rgba(30,23,36,.30),0 2px 3px rgba(30,23,36,.25),inset 0 -9px 13px rgba(30,23,36,.24),inset 0 8px 11px rgba(255,255,255,.55);
+--dent:inset 5px 6px 10px rgba(30,23,36,.40),inset -3px -3px 7px rgba(255,255,255,.28);
+--display:"Baloo 2",system-ui,sans-serif;--sans:"Nunito",system-ui,sans-serif;--mono:"DM Mono",ui-monospace,Consolas,monospace}
+:root{--c-rail:#5fc670;--c-white:#62ba9e;--c-q:#d27648;--c-btn:#deb845;--c-tag:#e9af53;--c-plum:#68d0e8;--c-teal:#90d152;--a-rail:#c761b6;--a-q:#47a4d3;--a-void:#90d251;--c-card:#ebe5cb;--page-fg:#e0dac2}
+/* eye rest: drop all color, keep shape and light */
+:root[data-grey="1"] body{filter:grayscale(1) brightness(.94)}
+body{background:var(--grain),radial-gradient(90% 70% at 30% 0%,rgba(255,255,255,.18),transparent 60%),var(--table);color:var(--page-fg);font:700 16px/1.5 var(--sans);padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px}
+.wrap{max-width:1840px;margin:0 auto;display:grid;gap:22px}
+h1{font:800 34px/1.05 var(--display);margin:8px 0 6px;text-wrap:balance}
+p{margin:0;max-width:64ch}.mut{color:var(--page-mute)}.ex{font:500 11px var(--mono);letter-spacing:.1em;color:var(--page-mute)}
+.vib{display:flex;gap:10px;align-items:center;font-weight:800;color:var(--page-fg)}.vib input{width:180px;accent-color:var(--a-void)}.vib b{font:500 13px var(--mono);min-width:2ch}
+.top{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}
+/* clay lump: grain + lit top-left + color, uneven outline, contact shadow */
+.lump{background:var(--grain),var(--lit),var(--c,var(--c-card));color:var(--ink);box-shadow:var(--lump);border-radius:46px 54px 50px 44px/52px 46px 54px 48px}
+.btn{font:800 15px var(--sans);border:0;cursor:pointer;color:var(--ink);padding:13px 28px;border-radius:36px 42px 38px 44px/42px 36px 44px 38px;background:var(--grain),var(--lit),var(--c,var(--c-card));box-shadow:var(--lump-s)}
+.btn:hover{transform:translateY(-2px) rotate(-1deg)}
+.btn:active,.btn[aria-pressed="true"]{box-shadow:var(--dent);transform:translateY(3px)}
+.btn.go{--c:var(--accent,var(--c-btn));color:var(--c-btn-fg)}
+.btn[aria-pressed="true"]{--c:var(--c-btn)}
+button:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+.board{display:grid;grid-template-columns:132px minmax(0,1fr);gap:22px;align-items:start}
+.rail{--c:var(--c-rail);--accent:var(--a-rail);padding:24px 14px;display:grid;gap:8px;align-content:start;transform:rotate(-.6deg)}
+.rail b{font:500 11px var(--mono);letter-spacing:.14em;color:var(--ink-mute);padding:0 10px 4px}
+.rail span{padding:9px 14px;border-radius:26px 30px 24px 32px/30px 24px 32px 26px}
+.rail .on{background:var(--grain),var(--accent,var(--c-tag));box-shadow:var(--lump-s)}
+.main{display:grid;gap:24px;min-width:0}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.bar b{font:800 26px var(--display);margin-right:6px}
+.tag{font:800 12px var(--sans);padding:5px 14px;color:var(--ink);background:var(--grain),var(--lit),var(--c,var(--c-tag));box-shadow:var(--lump-s);border-radius:20px 24px 18px 26px/24px 18px 26px 20px}
+.split{display:grid;grid-template-columns:minmax(0,2.7fr) minmax(300px,1fr);gap:22px;align-items:start}
+.panel{padding:24px;display:grid;gap:18px;align-content:start;min-width:0}
+.panel.w{--c:var(--c-white);transform:rotate(.4deg);min-height:70vh}.panel.q{--c:var(--c-q);--accent:var(--a-q);transform:rotate(-.5deg);border-radius:52px 44px 56px 46px/46px 54px 44px 52px}
+.panel>h3{margin:0;font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute)}
+.items{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px}
+.item{display:grid;gap:6px;min-width:0}.item.wide{grid-column:1/-1}
+.slot{aspect-ratio:16/9;background:var(--grain),var(--c-well);box-shadow:var(--dent);border-radius:30px 26px 32px 28px/28px 32px 26px 30px;display:grid;place-items:center;text-align:center;padding:8px;font:500 11px var(--mono);color:var(--ink-mute)}
+.cap{font-size:13px;color:var(--ink-mute);padding-left:8px}
+.q1{display:grid;gap:10px;padding-top:16px;border-top:3px dotted rgba(30,23,36,.35)}.q1:first-of-type{border:0;padding-top:0}
+.opt{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 18px;background:var(--grain),var(--lit),var(--c-card);box-shadow:var(--lump-s);border-radius:28px 34px 30px 36px/34px 28px 36px 30px}
+.opt.rec{--c-card:var(--accent,var(--c-tag))}.opt i{font:500 10px var(--mono);font-style:normal;letter-spacing:.1em}
+.fb{background:var(--grain),var(--c-card);box-shadow:inset 3px 4px 9px rgba(30,23,36,.22),inset -2px -2px 6px rgba(255,255,255,.4);border-radius:28px 32px 26px 34px/32px 26px 34px 28px;padding:10px 16px;color:var(--ink);font-size:15px;font-weight:700}
+.fb .ph{color:var(--ink-mute)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+kbd{display:inline-block;font:800 13px var(--mono);background:var(--c-card);color:var(--ink);border-radius:12px 14px 12px 15px/14px 12px 15px 12px;box-shadow:0 3px 6px rgba(30,23,36,.32),inset 0 -4px 6px rgba(30,23,36,.18),inset 0 3px 5px rgba(255,255,255,.65);padding:2px 10px;margin:0 2px}
+.hint{font-size:14px;color:var(--ink);font-weight:800}
+.rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px}
+.card{padding:22px;display:grid;gap:6px;align-content:start}
+.card:nth-child(1){--c:var(--c-teal)}.card:nth-child(2){--c:var(--c-tag)}.card:nth-child(3){--c:var(--c-plum)}.card:nth-child(4){--c:var(--c-card)}
+.card b{font:800 18px var(--display)}.card p{font-size:14px;color:var(--ink-mute)}
+.sw{display:flex;gap:12px;flex-wrap:wrap}.sw span{width:46px;height:42px;border-radius:55% 45% 50% 50%/50% 55% 45% 50%;background:var(--grain),var(--lit),var(--k);box-shadow:var(--lump-s)}
+/* stop-motion: three poses, held, one burst of about .35s on hover or press. Never constant. Off when the viewer asks for less motion. */
+@keyframes boil{0%{transform:rotate(var(--r,0deg)) translate(0,0)}33%{transform:rotate(calc(var(--r,0deg) + .3deg)) translate(1px,-1px)}66%{transform:rotate(calc(var(--r,0deg) - .3deg)) translate(-1px,1px)}100%{transform:rotate(var(--r,0deg)) translate(0,0)}}
+.wobble-once,.opt:hover,.rail span:hover,kbd:hover,.btn:hover{animation:boil var(--wobble-duration,.35s) steps(1) 1}
+.panel.w{--r:.4deg}.panel.q{--r:-.5deg}.rail{--r:-.6deg}
+@media (prefers-reduced-motion:reduce){.wobble-once,.opt:hover,.rail span:hover,kbd:hover,.btn:hover{animation:none}.btn:hover{transform:none}}
+@media (max-width:980px){.split{grid-template-columns:1fr}.panel.w{min-height:0}}
+@media (max-width:780px){.board{grid-template-columns:1fr}.rail{display:none}}
+</style>
+
+<div class="wrap">
+ <div class="top"><div><h1>The workbench, in claymation</h1><p class="mut">Shapes look hand-modeled. Edges are uneven, the surface has grain, and light falls from the top left. Lumps wobble once when you hover or press them, like a stop-motion frame. The theme is dark only. The palette is StarExplorer at 70% vibrancy, locked in. The Greyscale button rests your eyes. All content is example content.</p></div>
+  <div class="btns"><button class="btn" id="grey" aria-pressed="false">Greyscale</button></div></div>
+ <p class="ex">EXAMPLE CONTENT ONLY</p>
+
+ <div class="board">
+  <div class="lump rail"><b>MODS</b><span class="on">All boards</span><span>Mod A</span><span>Mod B</span><span>Status</span></div>
+  <div class="main">
+   <div class="bar"><b>First panel of the settlement terminal</b><span class="tag" style="--c:var(--c-card)">screen</span><span class="tag" style="--c:var(--a-void)">1 blocking</span><span class="tag">raised by research</span></div>
+   <div class="split">
+    <div class="lump panel w"><h3>Whiteboard</h3>
+     <div class="items">
+      <div class="item"><div class="slot">UI snapshot<br>(image)</div><span class="cap">Current menu in game</span></div>
+      <div class="item"><div class="slot">Suggested rendering<br>(image)</div><span class="cap">Proposed layout</span></div>
+      <div class="item"><div class="slot">Inspiration<br>(image)</div><span class="cap">Reference from another game</span></div>
+      <div class="item"><div class="slot">SWF draft<br>(played in Ruffle)</div><span class="cap">Draft menu, 16:9 1080p</span></div>
+      <div class="item wide"><div class="slot" style="aspect-ratio:32/9">Data visualization (HTML or SVG)</div><span class="cap">Built by the agent, shown in a sandbox</span></div>
+     </div>
+     <span class="cap" style="padding:0">Click a spot on an item to leave a note. The note becomes a task.</span>
+    </div>
+    <div class="lump panel q"><h3>Questions</h3>
+     <div class="q1"><b>1. Which layout for the first panel?</b>
+      <div class="opt rec"><span>1 Option one</span><i>DEFAULT</i></div><div class="opt"><span>2 Option two</span></div><div class="opt"><span>3 Option three</span></div>
+      <div class="fb"><span class="ph">Comment (optional)</span></div></div>
+     <div class="q1"><b>2. Should building feel slow and careful?</b>
+      <span class="cap" style="padding:0">My suggestion: yes, with a short build time that you can skip.</span>
+      <div class="btns"><span class="btn go">Yes</span><span class="btn">Different answer</span></div></div>
+     <div class="q1"><b>3. What would you hate to see in this menu?</b><div class="fb"><span class="ph">Write your answer</span></div></div>
+     <span class="hint"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> pick &nbsp; <kbd>Enter</kbd> default &nbsp; <kbd>S</kbd> skip</span>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <div class="rows">
+  <div class="lump card"><b>Shapes</b><p>Lumps with uneven outlines, a lit top left and a shadow where they touch the table. Wells are pressed in, like a thumb dent.</p></div>
+  <div class="lump card"><b>Color</b><p>The colors come from your StarExplorer game. Each surface uses its complement as the accent: blue on the orange panel, orchid on the green rail, chartreuse on the violet table. The table is its dark violet. The clay uses the five planet colors, the probe cyan and the ferry amber. Gold is the action color. The tag colors come from fields in the board files.</p></div>
+   <div class="lump card"><b>Motion</b><p>Three held poses, one short burst on hover or press. It never runs by itself. It turns off when your system asks for less motion.</p></div>
+  <div class="lump card"><b>Palette</b><div class="sw"><span style="--k:var(--c-btn)"></span><span style="--k:var(--c-tag)"></span><span style="--k:var(--c-rail)"></span><span style="--k:var(--c-white)"></span><span style="--k:var(--c-q)"></span><span style="--k:var(--c-plum)"></span></div></div>
+ </div>
+</div>
+
+<script>
+const root=document.documentElement,G=document.getElementById("grey");
+function read(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function write(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function mark(){G.setAttribute("aria-pressed",String(root.dataset.grey==="1"))}
+G.onclick=()=>{root.dataset.grey=root.dataset.grey==="1"?"0":"1";write("wb-grey",root.dataset.grey);mark()};
+if(read("wb-grey")==="1")root.dataset.grey="1";mark();
+document.addEventListener("click",e=>{const t=e.target.closest(".opt,.btn");if(!t||t.classList.contains("wobble-once"))return;t.classList.add("wobble-once");t.addEventListener("animationend",()=>t.classList.remove("wobble-once"),{once:true})});
+</script>

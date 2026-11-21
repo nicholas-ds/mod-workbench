@@ -1,0 +1,23 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+testing.toml
+backups/
+demo/**/answers.json
+demo/**/notes/
+demo/**/briefs/
+demo/**/LOG.md
+
+# workbench runtime files
+/boards/
+/messages/
+/status/
+
+# private working files, kept local only
+/archive/
+/briefs/
+/notes/
+/tracking.md
+/LESSONS.md
+/unused-ids.json

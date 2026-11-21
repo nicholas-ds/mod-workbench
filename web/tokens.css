@@ -1,0 +1,147 @@
+/* Design standard tokens. Source: StarExplorer (theme.uss, PlanetView.cs, art-backlog.md). See docs/design-standard.md.
+   Dark only. Greyscale is data-grey="1". */
+:root, .theme-classic {
+  /* StarExplorer palette, exact values */
+  --void: #1e1724;
+  --hue-sienna: #d9733f;
+  --hue-gold: #e6ba3b;
+  --hue-chartreuse: #91d94d;
+  --hue-verdigris: #5ccc6e;
+  --hue-teal: #61bfa1;
+  --signal-cyan: #66d9f2;
+  --signal-amber: #f2b34d;
+  --star-cream: #ffedad;
+
+  /* complements: each StarExplorer color rotated 180 degrees in hue, same lightness and saturation */
+  --comp-sienna: #3fa5d9;
+  --comp-gold: #3b67e6;
+  --comp-chartreuse: #954dd9;
+  --comp-verdigris: #cc5cba;
+  --comp-teal: #bf617f;
+  --comp-cyan: #f27f66;
+  --comp-amber: #4d8cf2;
+  --comp-void: #91d94d;
+
+  /* clay colors: StarExplorer hues at 70% vibrancy between the eye-comfort set and the original (docs/eye-comfort.md) */
+  --clay-rail: #5fc670;
+  --clay-whiteboard: #62ba9e;
+  --clay-questions: #d27648;
+  --clay-deny: #d4604b;
+  --clay-gold: #deb845;
+  --clay-blue: #47a4d3;
+  --clay-tag: #e9af53;
+  --clay-info: #68d0e8;
+  --clay-green: #90d152;
+  --clay-card: #ebe5cb;
+  --clay-well: rgba(30, 23, 36, 0.24);
+  --engrave-highlight: rgba(255, 255, 255, 0.55);
+  --engrave-shade: rgba(30, 23, 36, 0.35);
+  --clay-field: var(--clay-card);
+
+  /* accents: the complement of each surface, tuned the same way */
+  --accent-on-void: #90d251;
+  --accent-on-sienna: #47a4d3;
+  --accent-on-teal: #c2708a;
+  --accent-on-verdigris: #c761b6;
+
+  /* agent chip states: calm tints of existing hues, one per state (web/agent_chip.js) */
+  --chip-stale: color-mix(in srgb, var(--color-ink-dim) 14%, var(--clay-card));
+  --chip-claude: color-mix(in srgb, var(--hue-teal) 28%, var(--clay-card));
+  --chip-glm: color-mix(in srgb, var(--comp-sienna) 28%, var(--clay-card));
+  --chip-waits-author: color-mix(in srgb, var(--clay-gold) 32%, var(--clay-card));
+  --chip-lost: color-mix(in srgb, var(--comp-teal) 28%, var(--clay-card));
+  --chip-idle: color-mix(in srgb, var(--star-cream) 40%, var(--clay-card));
+  --chip-stalled: color-mix(in srgb, var(--hue-sienna) 28%, var(--clay-card));
+
+  /* roles */
+  --color-surface: var(--void);
+  --color-text: #e0dac2;
+  --color-text-dim: #b3a6bf;
+  --color-ink: var(--void);
+  --color-ink-dim: #2c2038;
+  --color-action: var(--accent-on-void);
+  --color-alert: var(--clay-questions);
+  --color-scrim: rgba(0, 0, 0, 0.6);
+  --color-scrim-soft: rgba(0, 0, 0, 0.5);
+
+  /* spacing and type, same scale as StarExplorer */
+  --space-xs: 2px;
+  --space-sm: 4px;
+  --space-md: 8px;
+  --space-lg: 16px;
+  --space-xl: 32px;
+  --font-size-title: 22px;
+  --font-size-body: 16px;
+  --font-size-hint: 13px;
+  --font-size-report: 12px;
+  --font-display: "Baloo 2", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, Consolas, monospace;
+
+  /* light: one key light from the top left, a fill, dim ambient (art-backlog.md) */
+  --clay-lit: radial-gradient(
+    120% 90% at 22% 12%,
+    rgba(255, 255, 255, 0.42),
+    transparent 58%
+  );
+  --clay-shadow:
+    0 12px 0 -4px rgba(0, 0, 0, 0.35), 0 20px 28px rgba(0, 0, 0, 0.55),
+    inset 0 -10px 14px rgba(20, 10, 30, 0.28),
+    inset 0 8px 12px rgba(255, 255, 255, 0.26);
+  --clay-shadow-small:
+    0 8px 14px rgba(0, 0, 0, 0.45), 0 2px 3px rgba(0, 0, 0, 0.35),
+    inset 0 -9px 13px rgba(30, 23, 36, 0.24),
+    inset 0 8px 11px rgba(255, 255, 255, 0.55);
+  --clay-shadow-raised:
+    0 14px 20px rgba(0, 0, 0, 0.5), 0 3px 5px rgba(0, 0, 0, 0.4),
+    inset 0 -9px 13px rgba(30, 23, 36, 0.24),
+    inset 0 8px 11px rgba(255, 255, 255, 0.55);
+  --clay-dent-soft:
+    inset 3px 4px 7px rgba(0, 0, 0, 0.3),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.14);
+  --clay-dent:
+    inset 5px 6px 10px rgba(0, 0, 0, 0.5),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.2);
+  --clay-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.12  0 0 0 0 0.09  0 0 0 0 0.14  0 0 0 .4 -.09'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+
+  /* scrollbars: a dented groove with a clear ring of breathing room, a lit lump for the thumb */
+  --scroll-size: 22px;
+  --scroll-breath: 4px;
+  --scroll-thumb-inset: 2px;
+  --scroll-end-clear: 36px;
+  --scroll-track: rgba(30, 23, 36, 0.22);
+  --scroll-track-dent:
+    inset 2px 3px 4px rgba(30, 23, 36, 0.4),
+    inset -1px -2px 3px rgba(255, 255, 255, 0.35);
+  --scroll-thumb-shadow:
+    inset 0 -3px 4px rgba(30, 23, 36, 0.28),
+    inset 0 2px 3px rgba(255, 255, 255, 0.6);
+
+  /* motion: three held poses, one short burst of about 0.35s */
+  --wobble-duration: 0.35s;
+  color-scheme: dark;
+}
+
+/* eye rest: remove all color, keep shape and light */
+:root[data-grey="1"] body {
+  filter: grayscale(1) brightness(0.94);
+}
+
+/* Calm theme: the same hues with less saturation on large areas and a softer highlight.
+   Classic is the default in tokens.css. Applied with data-theme="calm" on the root element.
+   Rules and numbers: docs/color-value-principles.md. */
+:root[data-theme="calm"] {
+  --clay-rail: #69b275;
+  --clay-deny: #c86a5a;
+  --clay-whiteboard: #6aa894;
+  --clay-gold: #d0b153;
+  --clay-tag: #dbac61;
+  --clay-info: #74c9dc;
+  --clay-green: #90c65d;
+  --accent-on-void: #90c65d;
+  --accent-on-sienna: #54a0c6;
+  --accent-on-teal: #be748c;
+  --accent-on-verdigris: #c266b3;
+  --clay-lit: radial-gradient(120% 90% at 22% 12%, rgba(255, 255, 255, 0.28), transparent 58%);
+  --color-text-dim: #c4b9cd;
+}

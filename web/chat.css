@@ -1,0 +1,169 @@
+/* Chat page: built only from tokens.css and clay.css. */
+.chat {
+  --clay-color: var(--clay-card);
+  display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: var(--space-lg);
+  padding: 20px 22px; min-width: 0; height: calc(100vh - 190px); min-height: 360px;
+}
+.chat-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-lg); }
+.chat-switch { --accent: var(--accent-on-void); display: flex; flex-wrap: wrap; gap: var(--space-md); }
+.chat-holder { display: grid; min-height: 0; }
+.chat-thread {
+  display: flex; flex-direction: column; gap: var(--space-md); overflow-y: auto; min-height: 0;
+  padding: var(--space-lg); font-size: var(--font-size-body);
+  background: var(--clay-grain), var(--clay-well); box-shadow: var(--clay-dent);
+  border-radius: 30px 26px 32px 28px / 28px 32px 26px 30px;
+}
+.chat-message {
+  padding: var(--space-md) var(--space-lg); max-width: 88%; width: fit-content; align-self: flex-start; white-space: pre-wrap; overflow-wrap: anywhere;
+  color: var(--color-ink); background: var(--clay-grain), var(--clay-card); box-shadow: var(--clay-shadow-small);
+  border-radius: 18px 22px 18px 24px / 22px 18px 24px 18px;
+}
+.chat-message.is-user { align-self: flex-end; background: var(--clay-grain), var(--clay-tag); }
+
+/* Rendered Markdown fits the bubble. The bubble keeps pre-wrap for plain text,
+   so the Markdown block resets it, or the newlines between tags show as gaps. */
+:is(.chat-message, .dock-message, .dock-reply) .item-markdown {
+  white-space: normal; padding: 0; font: inherit; max-height: none; overflow: visible; overflow-wrap: anywhere;
+}
+:is(.chat-message, .dock-message, .dock-reply) .item-markdown > :first-child { margin-top: 0; }
+:is(.chat-message, .dock-message, .dock-reply) .item-markdown > :last-child { margin-bottom: 0; }
+:is(.chat-message, .dock-message, .dock-reply) .item-markdown :is(ul, ol) { padding-left: var(--space-xl); }
+:is(.chat-message, .dock-message, .dock-reply) .item-markdown pre { overflow-x: auto; white-space: pre; }
+:is(.chat-message, .dock-message, .dock-reply) .item-markdown img { max-width: 100%; }
+.chat-message.is-error { background: var(--clay-grain), var(--clay-questions); }
+.chat-chip {
+  align-self: flex-start; padding: 2px 12px; font: 500 var(--font-size-report) var(--font-mono); color: var(--color-ink);
+  background: var(--clay-grain), var(--clay-info); box-shadow: var(--clay-shadow-small);
+  border-radius: 12px 14px 12px 15px / 14px 12px 15px 12px;
+}
+.session-chip {
+  margin-left: auto; border: 0; padding: 0; background: none; box-shadow: none; cursor: pointer;
+  font: 500 var(--font-size-report) var(--font-mono); letter-spacing: 0.03em;
+  color: var(--color-ink-dim); opacity: 0.8;
+  text-shadow: 0 1px 0 var(--engrave-highlight), 0 -1px 0 var(--engrave-shade);
+}
+.context-meter {
+  font: 500 calc(var(--font-size-report) * 1.2) var(--font-mono); letter-spacing: 0.03em; white-space: nowrap;
+  color: var(--color-ink-dim); opacity: 0.8;
+  text-shadow: 0 1px 0 var(--engrave-highlight), 0 -1px 0 var(--engrave-shade);
+}
+.session-chip:hover:not(:disabled) { opacity: 1; }
+.session-chip:disabled { opacity: 0.35; cursor: default; }
+.chat-notice {
+  align-self: center; font: 500 var(--font-size-report) var(--font-mono); letter-spacing: 0.03em;
+  color: var(--color-ink-dim); opacity: 0.8;
+  text-shadow: 0 1px 0 var(--engrave-highlight), 0 -1px 0 var(--engrave-shade);
+}
+/* Handoff card: a flat, calm card with a thin edge. It shows what the new agent received. */
+.chat-handoff {
+  align-self: center; max-width: 72%; padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-md, 12px); background: var(--clay-grain), var(--clay-card);
+  border: 1px solid color-mix(in srgb, var(--accent-on-sienna) 55%, transparent);
+  color: var(--color-ink-dim); font-size: var(--font-size-report);
+}
+.chat-handoff blockquote { margin: var(--space-sm) 0 0; padding-left: var(--space-md); border-left: 2px solid color-mix(in srgb, var(--accent-on-sienna) 55%, transparent); }
+.chat-handoff p { margin: 0 0 var(--space-sm); }
+.chat-form { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: var(--space-lg); align-items: end; }
+.chat-clip { padding: var(--space-md) var(--space-xl); }
+.chat-holder.is-dropping { outline: 3px dashed var(--accent-on-void); outline-offset: -6px; }
+.chat-input { resize: none; min-height: 3.6em; max-height: 9em; width: 100%; box-sizing: border-box; padding: var(--space-md) var(--space-lg); font: inherit; }
+.chat-send { --clay-color: var(--accent-on-void); padding: var(--space-md) var(--space-xl); }
+.chat-stop { padding: var(--space-md) var(--space-xl); }
+.chat-stop:disabled, .chat-send:disabled { opacity: 0.5; cursor: default; }
+
+.chat-permission {
+  align-self: flex-start;
+  max-width: 86%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-md, 12px);
+  background: var(--clay-grain), var(--clay-card);
+}
+.chat-permission-actions { display: flex; gap: var(--space-sm); }
+.chat-permission-text { font-weight: 800; }
+.chat-permission-detail {
+  font: 500 var(--font-size-report) var(--font-mono); color: var(--color-ink-dim);
+  overflow-wrap: anywhere; max-height: 5em; overflow: hidden;
+}
+.chat-allow { --clay-color: var(--clay-green); }
+.chat-deny { --clay-color: var(--clay-deny); }
+
+/* Slash command picker: the command list that opens on a leading "/".
+   Look only here; each host decides placement below. */
+.slash-picker {
+  --clay-color: var(--clay-card);
+  z-index: 6; display: grid; gap: var(--space-xs); max-height: 22em; overflow-y: auto;
+  padding: var(--space-md); margin: 0; list-style: none;
+  background: var(--clay-grain), var(--clay-lit), var(--clay-color);
+  color: var(--color-ink); box-shadow: var(--clay-shadow-small);
+  border-radius: 18px 22px 18px 24px / 22px 18px 24px 18px;
+}
+.slash-picker[hidden] { display: none; }
+.slash-row {
+  display: flex; gap: var(--space-lg); align-items: baseline; cursor: pointer;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: 10px 12px 10px 14px / 12px 10px 14px 12px;
+}
+.slash-row.is-selected { background: var(--clay-grain), var(--clay-tag); box-shadow: var(--clay-dent-soft); }
+.slash-row-name { font: 500 var(--font-size-hint) var(--font-mono); white-space: nowrap; }
+.slash-row-description {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 500 var(--font-size-report) var(--font-body); color: var(--color-ink-dim);
+}
+/* Chat form: the input sits at the pane bottom, so the list floats above it,
+   anchored to a relative wrapper that takes the input's grid column. */
+.chat-input-wrap { position: relative; }
+.chat-form .slash-picker { position: absolute; left: 0; right: 0; bottom: calc(100% + var(--space-sm)); }
+/* Message dock: the input sits near the top of the dock, and the dock clips
+   overflow, so the list takes its own full-width grid row above the input
+   instead of floating; the dock grows upward, it is anchored at the bottom. */
+.message-dock .slash-picker { grid-column: 1 / -1; }
+
+/* Thread tabs: a dented tray on its own row under the orchestrator switch. */
+.thread-tabs {
+  --accent: var(--accent-on-void);
+  justify-self: start; display: inline-flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm);
+  background: var(--clay-grain), color-mix(in srgb, var(--accent) 12%, var(--clay-well)); box-shadow: var(--clay-dent-soft);
+  border-radius: 26px 22px 28px 24px / 24px 28px 22px 26px;
+}
+.thread-seg { display: inline-flex; align-items: center; border-radius: 20px; }
+.thread-seg.is-selected {
+  background: var(--clay-grain), var(--clay-lit), var(--accent); box-shadow: var(--clay-shadow-small);
+}
+.thread-tab, .thread-tab-close, .thread-tab-add {
+  border: 0; cursor: pointer; background: transparent; color: var(--color-ink-dim); white-space: nowrap;
+  font: 700 var(--font-size-hint) var(--font-body);
+}
+.thread-tab { padding: var(--space-sm) var(--space-lg); border-radius: 20px; }
+.thread-seg.is-selected .thread-tab { color: var(--color-ink); }
+.thread-seg.is-selected .thread-tab:has(+ .thread-tab-close) { padding-right: var(--space-sm); }
+.thread-tab-close { padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-xs); border-radius: 0 20px 20px 0; opacity: 0.55; }
+.thread-tab-close:hover { opacity: 1; }
+.thread-tab-add {
+  padding: var(--space-xs) var(--space-md); font-size: var(--font-size-body); color: var(--color-ink); border-radius: 20px;
+  background: var(--clay-grain), var(--clay-lit), var(--clay-card); box-shadow: var(--clay-shadow-small);
+}
+.thread-tab:hover, .thread-tab-add:hover { color: var(--color-ink); }
+.thread-tab:focus-visible, .thread-tab-close:focus-visible, .thread-tab-add:focus-visible { outline: 3px solid var(--color-text); outline-offset: 2px; }
+
+/* Backend toggle: a dented tray in the chat head, right of the orchestrator switch. */
+.backend-toggle {
+  --accent: var(--accent-on-void);
+  display: inline-flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm);
+  background: var(--clay-grain), color-mix(in srgb, var(--accent) 12%, var(--clay-well)); box-shadow: var(--clay-dent-soft);
+  border-radius: 26px 22px 28px 24px / 24px 28px 22px 26px;
+}
+.backend-seg {
+  display: inline-flex; align-items: center; border: 0; cursor: pointer; white-space: nowrap;
+  padding: var(--space-sm) var(--space-lg); border-radius: 20px;
+  background: transparent; color: var(--color-ink-dim); font: 700 var(--font-size-hint) var(--font-body);
+}
+.backend-toggle .backend-seg.is-active {
+  background: var(--clay-grain), var(--clay-lit), var(--accent); box-shadow: var(--clay-shadow-small);
+  color: var(--color-ink);
+}
+.backend-seg:hover { color: var(--color-ink); }
+.backend-seg:focus-visible { outline: 3px solid var(--color-text); outline-offset: 2px; }
+.thread-tab[data-mark]::after { content: " · " attr(data-mark); font: 500 var(--font-size-report) var(--font-mono); }

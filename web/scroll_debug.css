@@ -1,0 +1,8 @@
+/* Debug only: loaded by scroll_debug.js. Outlines show the real boxes behind each table scroll bar. */
+.debug-scroll .table-scroll, .debug-scroll .scroll-track { outline: 1px dashed var(--clay-questions); }
+.debug-scroll .status-mod, .debug-scroll .boards { outline: 1px dashed var(--clay-info); }
+.scroll-debug-panel {
+  position: fixed; left: 12px; top: 12px; z-index: 20; margin: 0; padding: var(--space-md) var(--space-lg);
+  max-width: min(640px, 90vw); font: 500 var(--font-size-report) / 1.4 var(--font-mono); white-space: pre-wrap;
+  --clay-color: var(--clay-card); pointer-events: none;
+}

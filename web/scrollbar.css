@@ -1,0 +1,20 @@
+/* Clay scroll bars: a dented groove and a lit lump, no arrows. Also inlined into HTML board items.
+   The transparent border is the breathing room: it keeps the groove clear of the frame edge and of the content.
+   The end margin keeps the groove clear of a rounded frame corner. */
+::-webkit-scrollbar { width: var(--scroll-size); height: var(--scroll-size); }
+::-webkit-scrollbar-button { display: none; }
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-track {
+  background: var(--scroll-track); background-clip: padding-box;
+  border: var(--scroll-breath) solid transparent; border-radius: var(--scroll-size);
+  box-shadow: var(--scroll-track-dent);
+}
+::-webkit-scrollbar-track:vertical { margin: var(--scroll-end-clear) 0; }
+::-webkit-scrollbar-track:horizontal { margin: 0 var(--scroll-end-clear); }
+::-webkit-scrollbar-thumb {
+  background: var(--clay-grain), var(--clay-lit), var(--clay-tag); background-clip: padding-box;
+  border: calc(var(--scroll-breath) + var(--scroll-thumb-inset)) solid transparent; border-radius: var(--scroll-size);
+  box-shadow: var(--scroll-thumb-shadow);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--clay-grain), var(--clay-lit), var(--clay-gold); background-clip: padding-box; }
+@supports not selector(::-webkit-scrollbar) { * { scrollbar-width: thin; scrollbar-color: var(--clay-tag) transparent; } }

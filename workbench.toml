@@ -1,0 +1,9 @@
+name = "Workbench"
+platform = ".."
+screens = []
+boards = "boards"
+status = "status/workspaces"
+tracking = "tracking.md"
+log = "LOG.md"
+briefs = "briefs"
+exports = "exports"

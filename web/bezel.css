@@ -1,0 +1,40 @@
+/* Whiteboard screen: a raised clay bezel, a dented ring, then the screen.
+   The ring walls are soft at the bottom and sharp at the top, so the recess reads as 3D. */
+.stage-bezel {
+  --bezel-fade-soft: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), #000);
+  --bezel-fade-sharp: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.7) 30%, transparent 75%);
+  --bezel-fade-screen: linear-gradient(to bottom, #000 0%, #000 50%, rgba(0, 0, 0, 0.4) 100%);
+  --bezel-pad: 36px;
+  box-sizing: border-box; width: min(100%, calc((100vh - 300px - 2 * var(--bezel-pad)) * 16 / 9 + 2 * var(--bezel-pad)));
+  padding: 22px; position: relative;
+  border-radius: 46px 42px 48px 44px / 44px 48px 42px 46px;
+  background: var(--clay-grain), radial-gradient(120% 90% at 22% 12%, rgba(255, 255, 255, 0.35), transparent 58%),
+    color-mix(in srgb, var(--clay-whiteboard) 88%, black);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35), inset 0 7px 10px rgba(255, 255, 255, 0.45), inset 0 -8px 12px rgba(20, 10, 30, 0.35);
+}
+.stage-ring {
+  position: relative; padding: 14px; background: var(--clay-grain), rgba(20, 10, 30, 0.3);
+  border-radius: 36px 32px 38px 34px / 34px 38px 32px 36px;
+  box-shadow: inset 0 9px 10px -2px rgba(0, 0, 0, 0.65), inset 0 -3px 4px rgba(255, 255, 255, 0.2);
+}
+.stage-ring::before, .stage-ring::after, .stage-bezel .item-well::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+}
+.stage-ring::before {
+  box-shadow: inset 18px 0 22px -6px rgba(0, 0, 0, 0.5), inset -18px 0 22px -6px rgba(0, 0, 0, 0.5);
+  -webkit-mask-image: var(--bezel-fade-soft); mask-image: var(--bezel-fade-soft);
+}
+.stage-ring::after {
+  box-shadow: inset 6px 0 4px -3px rgba(0, 0, 0, 0.75), inset -6px 0 4px -3px rgba(0, 0, 0, 0.75);
+  -webkit-mask-image: var(--bezel-fade-sharp); mask-image: var(--bezel-fade-sharp);
+}
+.stage-bezel .item-well {
+  width: 100%; border-radius: 20px; box-shadow: 0 0 0 3px rgba(20, 10, 30, 0.45);
+}
+.stage-bezel .item-well::after {
+  box-shadow: inset 0 10px 14px -2px rgba(0, 0, 0, 0.6), inset 8px 0 14px -6px rgba(0, 0, 0, 0.35), inset -8px 0 14px -6px rgba(0, 0, 0, 0.35);
+  -webkit-mask-image: var(--bezel-fade-screen); mask-image: var(--bezel-fade-screen);
+}
+.stage-bezel .item-well img, .stage-bezel .item-well iframe { border-radius: 20px; }
+.stage:fullscreen { padding-top: 60px; }
+.stage:fullscreen .stage-bezel { width: min(96vw, calc((100vh - 200px - 2 * var(--bezel-pad)) * 16 / 9 + 2 * var(--bezel-pad))); }

@@ -1,0 +1,18 @@
+# Copy this file to `testing.toml` and set every value for this machine.
+
+# The frozen baseline save. Only the author replaces this file.
+baseline = "C:/path/to/baseline.sfs"
+
+# SHA-256 of the baseline file. 64 hex characters.
+baseline_sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+
+# The main save folder of the game on this machine.
+saves_dir = "C:/Users/me/Documents/My Games/Starfield/Saves"
+
+# The test slot file inside `saves_dir`. The restore writes the baseline into it.
+quicksave_name = "Quicksave.0.sfs"
+
+# Folder for dated backups of the save folder. The script keeps the last 5.
+backups_dir = "C:/Users/me/Documents/My Games/Starfield/Saves-backups"
+
+keep = 5

@@ -1,0 +1,13 @@
+/* Rendered markdown inside a whiteboard well. Built only from tokens.css. */
+.item-markdown { max-height: 100%; overflow: auto; font: 600 15px/1.5 var(--font-body); color: var(--color-ink); padding: var(--space-md) var(--space-lg); }
+.item-markdown h1, .item-markdown h2, .item-markdown h3 { margin: 0 0 var(--space-md); font-family: var(--font-display); line-height: 1.2; }
+.item-markdown h1 { font-size: 22px; }
+.item-markdown h2 { font-size: 18px; }
+.item-markdown p, .item-markdown ul, .item-markdown ol { margin: 0 0 var(--space-md); }
+.item-markdown code { font: 500 13px var(--font-mono); background: var(--clay-well); padding: 0 var(--space-sm); border-radius: 8px; }
+.item-markdown pre { overflow: auto; padding: var(--space-md); background: var(--clay-well); border-radius: 14px; }
+.item-markdown pre code { background: none; padding: 0; }
+.item-markdown table { width: 100%; border-collapse: collapse; margin: 0 0 var(--space-md); }
+.item-markdown th { text-align: left; font: 500 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-ink-dim); }
+.item-markdown th, .item-markdown td { padding: 6px 10px; border-bottom: 3px dotted var(--clay-well); overflow-wrap: break-word; }
+.item-markdown a { color: var(--color-ink); text-decoration: underline; }
