@@ -17,12 +17,13 @@ export class ChatTranscripts {
   }
 
   add(name, item) {
-    this._itemsFor(name).push({
-      kind: item.kind,
-      text: item.text ?? DEFAULT_TEXT,
-      detail: item.detail ?? DEFAULT_DETAIL,
-      settled: item.settled ?? DEFAULT_SETTLED,
-    });
+    this._itemsFor(name).push(this._normalize(item));
+    this._notify(name);
+  }
+
+  // Replaces the whole transcript for one name with a single notification.
+  replaceAll(name, items) {
+    this._items.set(name, items.map((item) => this._normalize(item)));
     this._notify(name);
   }
 
@@ -34,6 +35,8 @@ export class ChatTranscripts {
     this._notify(name);
   }
 
+  // Explicit clearing, for callers that mean to wipe a transcript. Event
+  // kinds never clear as a side effect.
   clear(name) {
     this._items.set(name, []);
     this._notify(name);
@@ -42,14 +45,6 @@ export class ChatTranscripts {
   drop(name) {
     this._items.delete(name);
     this._running.delete(name);
-    this._notify(name);
-  }
-
-  dropAfterLastUser(name) {
-    const items = this._itemsFor(name);
-    const last = items.map((item) => item.kind).lastIndexOf("user");
-    if (last === -1) return;
-    this._items.set(name, items.slice(0, last + 1));
     this._notify(name);
   }
 
@@ -74,6 +69,15 @@ export class ChatTranscripts {
   _itemsFor(name) {
     if (!this._items.has(name)) this._items.set(name, []);
     return this._items.get(name);
+  }
+
+  _normalize(item) {
+    return {
+      kind: item.kind,
+      text: item.text ?? DEFAULT_TEXT,
+      detail: item.detail ?? DEFAULT_DETAIL,
+      settled: item.settled ?? DEFAULT_SETTLED,
+    };
   }
 
   _notify(name) {
