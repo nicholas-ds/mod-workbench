@@ -10,6 +10,7 @@ from workbench.chat_event import (
     KIND_USER,
 )
 from workbench.session_history_translator import SessionHistoryTranslator
+from workbench.user_text_cleaner import UserTextCleaner
 
 
 @dataclass(frozen=True)
@@ -109,3 +110,12 @@ def test_slash_command_wrapper_shows_as_the_command() -> None:
 def test_local_command_output_is_hidden() -> None:
     events = translate([user_message("<local-command-stdout>x</local-command-stdout>")])
     assert events == ()
+
+
+def test_handoff_block_stays_and_context_marker_is_cleaned() -> None:
+    marker = UserTextCleaner.CONTEXT_PREFIX + "b, item i, question q. Leave out parts that are null.)"
+    text = f"[handoff]\n{marker}\n[/handoff]\n{marker}\nhello"
+    events = translate([user_message(text)])
+    assert len(events) == 2
+    assert events[1].kind == KIND_USER
+    assert events[1].text == "hello"

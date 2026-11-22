@@ -19,6 +19,7 @@ from workbench.chat_event import (
 )
 from workbench.handoff_notice import HandoffNoticeBuilder
 from workbench.tool_input_detail import first_input_detail
+from workbench.user_text_cleaner import UserTextCleaner
 
 COMMAND_NAME = re.compile(r"<command-name>(.*?)</command-name>", re.DOTALL)
 LOCAL_OUTPUT_PREFIX = "<local-command"
@@ -67,12 +68,13 @@ class SessionHistoryTranslator:
         return tuple(events)
 
     def _shown_user_text(self, text: str) -> str:
+        text = UserTextCleaner().clean(text)
         command = COMMAND_NAME.search(text)
         if command is not None:
             return command.group(1).strip()
-        if text.lstrip().startswith(LOCAL_OUTPUT_PREFIX):
+        if text.startswith(LOCAL_OUTPUT_PREFIX):
             return ""
-        return text.strip()
+        return text
 
     def _split_handoff(self, text: str) -> tuple[str, str]:
         """Split a leading [handoff]..[/handoff] block from the typed text after it."""

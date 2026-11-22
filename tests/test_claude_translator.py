@@ -35,13 +35,13 @@ def test_pre_tool_use_is_running_and_counts_tool():
     assert event.last_tool == "Bash git status"
 
 
-def test_pre_tool_use_detail_is_one_line_and_cut_to_60_chars():
+def test_pre_tool_use_detail_is_one_line_and_cut_to_100_chars():
     payload = _base_payload("PreToolUse") | {
-        "tool_name": "Bash", "tool_input": {"command": "a\n b  c " + "x" * 80},
+        "tool_name": "Bash", "tool_input": {"command": "a\n b  c " + "x" * 120},
     }
     event = _translate(payload)
     assert "\n" not in event.last_tool
-    assert len(event.last_tool.split(" ", 1)[1]) <= 60
+    assert len(event.last_tool.split(" ", 1)[1]) <= 100
 
 
 def test_pre_tool_use_picks_first_non_empty_detail_key():

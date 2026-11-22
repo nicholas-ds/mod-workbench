@@ -9,6 +9,8 @@ on odd data.
 from __future__ import annotations
 
 from workbench.handoff_notice import HandoffNoticeBuilder
+from workbench.tool_input_detail import first_input_detail
+from workbench.user_text_cleaner import UserTextCleaner
 from workbench.chat_event import (
     ChatEvent,
     KIND_RESULT,
@@ -17,9 +19,6 @@ from workbench.chat_event import (
     KIND_TOOL,
     KIND_USER,
 )
-
-_DETAIL_KEYS = ("command", "filePath", "path")
-_DETAIL_LIMIT = 100
 
 
 class OpencodeChatTranslator:
@@ -48,8 +47,8 @@ class OpencodeChatTranslator:
         return (HandoffNoticeBuilder().build(text),)
 
     def _user_events(self, message: dict) -> tuple[ChatEvent, ...]:
-        text = self._string_field(message, "text")
-        if not text.strip():
+        text = UserTextCleaner().clean(self._string_field(message, "text"))
+        if not text:
             return ()
         return (ChatEvent(kind=KIND_USER, text=text),)
 
@@ -100,15 +99,8 @@ class OpencodeChatTranslator:
         return ChatEvent(
             kind=KIND_TOOL,
             tool_name=self._string_field(part, "name"),
-            detail=self._input_detail(tool_input),
+            detail=first_input_detail(tool_input),
         )
-
-    def _input_detail(self, tool_input: dict) -> str:
-        for key in _DETAIL_KEYS:
-            value = tool_input.get(key, "")
-            if isinstance(value, str) and value.strip():
-                return " ".join(value.split())[:_DETAIL_LIMIT]
-        return ""
 
     def _count_of(self, tokens: dict, key: str) -> int:
         value = tokens.get(key, 0)

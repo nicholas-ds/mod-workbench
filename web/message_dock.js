@@ -24,6 +24,8 @@ const COLLAPSED_KEY = "wb-dock-collapsed";
 const MAIN_TARGET = "main-orchestrator";
 const PLATFORM_UPLOAD_NAME = "main"; // the platform entry name in OrchestratorDirectory
 const CHIP_FIELDS = ["view", "mod", "board", "item", "question"];
+// Same prefix as UserTextCleaner.CONTEXT_PREFIX in workbench/user_text_cleaner.py.
+const CONTEXT_PREFIX = "(The author is looking at board ";
 
 export class MessageDock {
   constructor(api, parent, chat) {
@@ -226,7 +228,7 @@ export class MessageDock {
   _sdkPrompt(typedText) {
     const { board, item, question } = this._context;
     if (board === null || typedText.startsWith("/")) return typedText;
-    const line = `(The author is looking at board ${board}, item ${item}, question ${question}. Leave out parts that are null.)`;
+    const line = `${CONTEXT_PREFIX}${board}, item ${item}, question ${question}. Leave out parts that are null.)`;
     return `${line}\n${typedText}`;
   }
 

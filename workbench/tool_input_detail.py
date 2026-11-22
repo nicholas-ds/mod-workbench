@@ -1,9 +1,17 @@
-"""Extract a one-line detail string from a Claude Code tool input."""
+"""Extract a one-line detail string from any backend's tool input."""
 
 from __future__ import annotations
 
-_TOOL_INPUT_KEYS = ("command", "file_path", "description", "pattern", "url")
-_DETAIL_LIMIT = 60
+_TOOL_INPUT_KEYS = (
+    "command",
+    "file_path",
+    "filePath",
+    "path",
+    "description",
+    "pattern",
+    "url",
+)
+_DETAIL_LIMIT = 100
 
 
 def first_input_detail(tool_input: dict) -> str:
