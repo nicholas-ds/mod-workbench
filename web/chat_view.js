@@ -50,10 +50,10 @@ export class ChatView {
       this._loadOrchestrators();
       requestAnimationFrame(() => this._focusInput());
     } else {
-      // The host detaches and reattaches this node on re-render, which resets
-      // the thread's scrollTop to 0. Scroll again once it is back in the DOM.
+      // Reattach resets the thread's scroll; re-show the conversation so it opens
+      // at the latest message, the same path as a tab switch.
       requestAnimationFrame(() => {
-        this._scrollSelectedToBottom();
+        if (this._selected !== null) this._threads.show(this._selected);
         this._focusInput();
       });
     }
@@ -138,7 +138,6 @@ export class ChatView {
     this._refreshBackend(name);
     this._threads.show(name);
     this._applyFormState();
-    this._threads.scrollToBottom(name);
     this._chip.refresh();
     this._focusInput();
   }
@@ -236,7 +235,7 @@ export class ChatView {
 
   _afterResume() {
     this._chip.refresh();
-    this._scrollSelectedToBottom();
+    this._threads.show(this._selected);
   }
 
   _stopTurn() {
@@ -259,10 +258,5 @@ export class ChatView {
   _focusInputIfIdle() {
     const holder = document.activeElement;
     if (holder === null || holder === document.body) this._focusInput();
-  }
-
-  _scrollSelectedToBottom() {
-    if (this._selected === null) return;
-    this._threads.scrollToBottom(this._selected);
   }
 }

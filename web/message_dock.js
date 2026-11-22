@@ -10,6 +10,7 @@ import { DockTargets } from "./dock_targets.js";
 import { DomBuilder } from "./dom_builder.js";
 import { FlashMessage } from "./flash_message.js";
 import { ResizeGrip } from "./resize_grip.js";
+import { ScrollAnchor } from "./scroll_anchor.js";
 import { SessionIdChip } from "./session_id_chip.js";
 import { SlashCommandsClient } from "./slash_commands_client.js";
 import { ResumeControl } from "./resume_control.js";
@@ -37,7 +38,6 @@ export class MessageDock {
     this._targets = new DockTargets();
     this._paneThread = new DockPaneThread(api, (nodes) => this._renderThread(nodes), chat.agents);
     this._pickedByHand = false;
-    this._scrollToTopOnNextRender = true;
     this._agentCount = 0;
   }
 
@@ -109,7 +109,7 @@ export class MessageDock {
   _onTargetPicked() {
     this._pickedByHand = true;
     this._thread.replaceChildren();
-    this._scrollToTopOnNextRender = true;
+    this._pinNextRender = true;
     this._refreshThread();
   }
 
@@ -175,7 +175,7 @@ export class MessageDock {
     this._pickedByHand = true;
     this._target.value = label;
     this._applyCollapsed(false);
-    this._scrollToTopOnNextRender = true;
+    this._pinNextRender = true;
     this._updateSendState();
     this._refreshThread();
   }
@@ -192,7 +192,7 @@ export class MessageDock {
     this._updateSendState();
     if (context.mod !== previousMod && !this._pickedByHand) {
       this._target.value = this._defaultTarget();
-      this._scrollToTopOnNextRender = true;
+      this._pinNextRender = true;
       this._refreshThread();
     }
     this._pickedByHand = false;
@@ -295,9 +295,9 @@ export class MessageDock {
   }
 
   _renderThread(nodes) {
-    const keptScroll = this._thread.scrollTop;
+    const wasNearBottom = this._pinNextRender || ScrollAnchor.isNearBottom(this._thread);
     this._thread.replaceChildren(...nodes);
-    this._thread.scrollTop = this._scrollToTopOnNextRender ? 0 : keptScroll;
-    this._scrollToTopOnNextRender = false;
+    ScrollAnchor.follow(this._thread, wasNearBottom);
+    this._pinNextRender = false;
   }
 }
