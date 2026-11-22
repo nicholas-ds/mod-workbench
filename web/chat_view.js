@@ -2,7 +2,7 @@
 
 import { DomBuilder } from "./dom_builder.js";
 import { AttachControl } from "./attach_control.js";
-import { ChatItemRenderer } from "./chat_item_renderer.js";
+import { TranscriptItemRenderer } from "./transcript_item_renderer.js";
 import { MarkdownView } from "./markdown_view.js";
 import { ChatBackends } from "./chat_backends.js";
 import { ChatThreads } from "./chat_threads.js";
@@ -21,7 +21,7 @@ export class ChatView {
     this._transcripts = transcripts;
     this._session = session;
     this._commands = new SlashCommandsClient();
-    this._threads = new ChatThreads(transcripts, new ChatItemRenderer(this._session, new MarkdownView()), agents);
+    this._threads = new ChatThreads(transcripts, new TranscriptItemRenderer(this._session, new MarkdownView(), { layout: "flat" }), agents);
     this._agents = agents;
     this._agentCount = 0;
     this._attacher = new UploadAttacher(chatStream, (message) => {

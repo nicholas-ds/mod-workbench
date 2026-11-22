@@ -1,21 +1,23 @@
-// The message thread of a terminal pane: poll its messages and build one exchange node per message.
+// The message thread of a terminal pane: poll its records and render them as dock exchanges.
 
 import { ActivityReader } from "./activity_reader.js";
 import { AgentsPill } from "./agents_pill.js";
-import { DomBuilder } from "./dom_builder.js";
+import { PaneTranscriptSource } from "./pane_transcript_source.js";
 import { WorkingPill } from "./working_pill.js";
 
 export class DockPaneThread {
-  constructor(api, render, agents) {
+  constructor(api, render, agents, renderer) {
     this._api = api;
     this._render = render;
     this._agents = agents;
+    this._source = new PaneTranscriptSource();
+    this._renderer = renderer;
   }
 
   async refresh(paneMod) {
     try {
       const [data, working] = await Promise.all([this._api.messages(paneMod), this._isWorking(paneMod)]);
-      const nodes = data.messages.map((message) => this._messageNode(message));
+      const nodes = this._renderer.render(this._source.items(data.messages), paneMod);
       const agents = AgentsPill.trailing(this._agents.runningFor(paneMod));
       this._render([...nodes, ...WorkingPill.trailing(working, paneMod), ...agents]);
     } catch {
@@ -31,12 +33,5 @@ export class DockPaneThread {
     } catch {
       return false;
     }
-  }
-
-  _messageNode(message) {
-    const exchange = DomBuilder.el("div", "dock-exchange");
-    exchange.appendChild(DomBuilder.el("div", "dock-message", message.text));
-    if (message.reply != null) exchange.appendChild(DomBuilder.el("div", "dock-reply", message.reply));
-    return exchange;
   }
 }

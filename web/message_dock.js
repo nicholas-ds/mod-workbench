@@ -38,7 +38,7 @@ export class MessageDock {
     this._timer = null;
     this._panes = [];
     this._targets = new DockTargets();
-    this._paneThread = new DockPaneThread(api, (nodes) => this._renderThread(nodes), chat.agents);
+    this._paneThread = new DockPaneThread(api, (nodes) => this._renderThread(nodes), chat.agents, chat.renderer);
     this._pickedByHand = false;
     this._agentCount = 0;
   }
@@ -141,13 +141,16 @@ export class MessageDock {
     return target && target.kind === kind ? target.name : null;
   }
 
-  _paneName() {
-    return this._targetName("pane") ?? MAIN_TARGET;
+  // One key for the pane conversation: send and thread read both derive their
+  // keys from this, so they can never land in different message stores.
+  _paneTarget() {
+    const name = this._targetName("pane") ?? MAIN_TARGET;
+    const pane = this._panes.find((entry) => entry.name === name);
+    return { name, mod: pane && pane.mod ? pane.mod : null };
   }
 
   _threadMod() {
-    const pane = this._panes.find((entry) => entry.name === this._paneName());
-    return pane && pane.mod ? pane.mod : null;
+    return this._paneTarget().mod;
   }
 
   _applyCollapsed(collapsed) {
@@ -236,9 +239,10 @@ export class MessageDock {
     const text = this._input.value.trim();
     const { view, board, item, question } = this._context;
     const payload = { text, context: { view, board, item, question } };
+    const target = this._paneTarget();
     this._input.value = "";
     this._updateSendState();
-    this._api.sendMessage(this._threadMod(), payload, this._paneName())
+    this._api.sendMessage(target.mod, payload, target.name)
       .then((result) => this._sent(result))
       .catch(() => this._failed(text));
   }
@@ -293,7 +297,7 @@ export class MessageDock {
   }
 
   _refreshPaneThread() {
-    return this._paneThread.refresh(this._threadMod());
+    return this._paneThread.refresh(this._paneTarget().mod);
   }
 
   _renderThread(nodes) {

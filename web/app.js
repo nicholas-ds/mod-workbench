@@ -8,9 +8,10 @@ import { ChatSession } from "./chat_session.js";
 import { ChatStream } from "./chat_stream.js";
 import { ChatTranscripts } from "./chat_transcripts.js";
 import { ChatView } from "./chat_view.js";
-import { DockItemRenderer } from "./dock_item_renderer.js";
+import { TranscriptItemRenderer } from "./transcript_item_renderer.js";
 import { HandoffChip } from "./handoff_chip.js";
 import { HomeView } from "./home_view.js";
+import { MarkdownView } from "./markdown_view.js";
 import { MessageDock } from "./message_dock.js";
 import { NextQuestion } from "./next_question.js";
 import { PageLocation } from "./page_location.js";
@@ -66,7 +67,7 @@ new LookMenu(lookButton).start();
 new VersionsChip(lookButton).start();
 new HandoffChip(api, more.button()).start();
 const dock = new MessageDock(api, document.body,
-  { chatStream, transcripts, session: chatSession, agents: agentActivity, renderer: new DockItemRenderer(chatSession) });
+  { chatStream, transcripts, session: chatSession, agents: agentActivity, renderer: new TranscriptItemRenderer(chatSession, new MarkdownView(), { layout: "exchange" }) });
 dock.start();
 const workingNotices = [
   ["orchestrator", new ChatActivity(transcripts), (name) => dock.openConversation(name)],
