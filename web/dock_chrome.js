@@ -23,6 +23,7 @@ export class DockChrome {
       if (this._openDrag.wasDragged()) return;
       onToggle();
     });
+    this._head.append(toggle);
     this._chips = DomBuilder.el("div", "dock-chips");
   }
 

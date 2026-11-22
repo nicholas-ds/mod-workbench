@@ -48,7 +48,7 @@ export class MessageDock extends ConversationPanel {
   }
 
   _build() {
-    this._chrome = new DockChrome(() => this._setExpanded(!this._chrome.isCollapsed()));
+    this._chrome = new DockChrome(() => this._setExpanded(this._chrome.isCollapsed()));
     this._sessionChip = new SessionIdChip(this._chat.chatStream, () => this._targetName("sdk"));
     this._chrome.head.append(this._sessionChip.node(), this._sessionChip.meterNode());
     this._input = DomBuilder.el("textarea", "dock-input clay-field");
@@ -67,8 +67,8 @@ export class MessageDock extends ConversationPanel {
     actions.append(this._send, this._attach.node());
     this._target = new TargetPicker(() => this._onTargetPicked());
     this._sessionChip.start();
-    this._chrome.dock.append(this._chrome.head, this._chrome.chipsNode, this._picker.node(),
-      this._resume.node(), this._input, actions, this._target.node, this._thread);
+    this._chrome.dock.append(this._chrome.head, this._thread, this._chrome.chipsNode, this._picker.node(),
+      this._resume.node(), this._input, actions, this._target.node);
   }
 
   // ConversationPanel hooks: the popup draws the sdk thread itself, or clears

@@ -4,7 +4,6 @@
   position: fixed; right: 24px; bottom: 24px; z-index: 5; box-sizing: border-box;
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-lg) var(--space-lg);
   width: min(460px, calc(100vw - 32px)); max-height: 92vh; overflow: hidden;
-  grid-template-rows: auto auto auto auto minmax(0, 1fr);
   padding: var(--space-lg) var(--space-xl) 20px;
   background: var(--clay-grain), var(--clay-lit), var(--clay-color);
   color: var(--color-ink); box-shadow: var(--clay-shadow-small);
@@ -45,7 +44,7 @@
 .dock-send { --clay-color: var(--accent); padding: var(--space-md) var(--space-xl); }
 .dock-actions { display: flex; flex-direction: column; justify-content: center; align-items: stretch; align-self: center; gap: var(--space-md); }
 .dock-thread {
-  grid-column: 1 / -1; display: grid; gap: var(--space-sm); overflow-y: auto; min-height: 0; max-height: 40vh;
+  grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-sm); overflow-y: auto; min-height: 0; max-height: 40vh;
   font-size: var(--font-size-hint); padding: var(--space-lg) var(--space-xl) var(--space-xl);
   background: var(--clay-grain), var(--clay-well); box-shadow: var(--clay-dent);
   border-radius: 30px 26px 32px 28px / 28px 32px 26px 30px;
