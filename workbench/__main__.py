@@ -35,7 +35,7 @@ from workbench.tables import TableBuilder
 from workbench.watch import FileChangeWatcher
 
 ROOTS_ENV = "WORKBENCH_ROOTS"
-DEFAULT_ROOTS = r"E:\repos\mods"
+DEFAULT_ROOTS = str(Path(__file__).resolve().parents[2])
 HOST = "127.0.0.1"
 PORT_ENV = "WORKBENCH_PORT"
 DEFAULT_PORT = 8760

@@ -21,3 +21,5 @@ demo/**/LOG.md
 /tracking.md
 /LESSONS.md
 /unused-ids.json
+scripts/start-workbench-hidden.vbs
+scripts/sdk_spike.py
