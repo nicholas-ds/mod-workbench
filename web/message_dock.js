@@ -1,39 +1,31 @@
 // Bottom dock: the author messages an SDK orchestrator or a terminal pane with the view context.
 
 import { sdkAttachControl } from "./attach_control.js";
-import { AgentsPill } from "./agents_pill.js";
-import { DragHandle } from "./drag_handle.js";
-import { DockCollapsedAnchor } from "./dock_collapsed_anchor.js";
-import { DockGravity } from "./dock_gravity.js";
+import { ConversationPanel } from "./conversation_panel.js";
+import { DockChrome } from "./dock_chrome.js";
 import { DockPaneThread } from "./dock_pane_thread.js";
 import { DockTargets } from "./dock_targets.js";
 import { DomBuilder } from "./dom_builder.js";
 import { FlashMessage } from "./flash_message.js";
-import { ResizeGrip } from "./resize_grip.js";
 import { ScrollAnchor } from "./scroll_anchor.js";
 import { SessionIdChip } from "./session_id_chip.js";
-import { SlashCommandsClient } from "./slash_commands_client.js";
-import { ResumeControl } from "./resume_control.js";
-import { SlashPicker } from "./slash_picker.js";
 import { TargetPicker } from "./target_picker.js";
-import { WorkingPill } from "./working_pill.js";
 import { ViewContext } from "./view_context.js";
 
 const RELOAD_MS = 5000;
-const COLLAPSED_KEY = "wb-dock-collapsed";
 const MAIN_TARGET = "main-orchestrator";
 const PLATFORM_UPLOAD_NAME = "main"; // the platform entry name in OrchestratorDirectory
-const CHIP_FIELDS = ["view", "mod", "board", "item", "question"];
 // Same prefix as UserTextCleaner.CONTEXT_PREFIX in workbench/user_text_cleaner.py.
 const CONTEXT_PREFIX = "(The author is looking at board ";
 
-export class MessageDock {
+export class MessageDock extends ConversationPanel {
   constructor(api, parent, chat) {
+    super(chat.session, chat.transcripts);
     this._api = api;
     this._parent = parent;
     this._chat = chat;
     this._agents = chat.agents;
-    this._commands = new SlashCommandsClient();
+    this._renderer = chat.renderer;
     this._context = ViewContext.shared().get();
     this._timer = null;
     this._panes = [];
@@ -45,74 +37,81 @@ export class MessageDock {
 
   start() {
     this._build();
-    this._anchor = new DockCollapsedAnchor();
-    this._gravity = new DockGravity(this._dock, this._anchor, document);
-    this._gravity.start();
-    this._openDrag = new DragHandle(this._dock, "wb-dock-pos-open");
-    this._openDrag.attach(this._head);
-    this._resizeGrip = new ResizeGrip(this._dock, "wb-dock-size");
-    this._parent.appendChild(this._dock);
+    this._chrome.mount(this._parent);
     this._chat.transcripts.subscribe((name) => this._onTranscript(name));
     this._agents.subscribe(() => this._onAgentsChange());
-    this._redrawChips();
+    this._chrome.setChips(this._context);
     this._updateSendState();
     this._loadTargets();
-    this._applyCollapsed(this._storedCollapsed());
+    this._applyCollapsed(this._chrome.storedCollapsed());
     document.addEventListener("wb-context", (event) => this._onContext(event.detail));
   }
 
-  _storedCollapsed() {
-    try { return localStorage.getItem(COLLAPSED_KEY) !== "0"; } catch { return false; }
-  }
-
   _build() {
-    this._dock = DomBuilder.el("div", "message-dock theme-classic");
-    this._head = DomBuilder.el("div", "dock-head");
-    const toggle = DomBuilder.el("button", "dock-toggle panel-title", "message");
-    this._toggleButton = toggle;
-    toggle.dataset.dragThrough = "";
-    toggle.addEventListener("click", () => {
-      if (this._openDrag.wasDragged()) return;
-      this._applyCollapsed(!this._dock.classList.contains("is-collapsed"));
-    });
+    this._chrome = new DockChrome(() => this._setExpanded(!this._chrome.isCollapsed()));
     this._sessionChip = new SessionIdChip(this._chat.chatStream, () => this._targetName("sdk"));
-    this._head.append(toggle, this._sessionChip.node(), this._sessionChip.meterNode());
-    this._chips = DomBuilder.el("div", "dock-chips");
+    this._chrome.head.append(this._sessionChip.node(), this._sessionChip.meterNode());
     this._input = DomBuilder.el("textarea", "dock-input clay-field");
     this._input.placeholder = "Message to the orchestrator";
-    // Build the picker before the Enter-to-send listener below: both listeners
-    // sit on the textarea, and the picker's keydown must win by registration order.
-    this._picker = new SlashPicker(this._input, () => this._commands.load(this._targetName("sdk")));
-    this._resume = new ResumeControl(this._input, this._chat.session, this._chat.transcripts,
-      () => this._targetName("sdk"), () => this._sessionChip.refresh());
+    this._makeInputHelpers(() => this._targetName("sdk"), () => this._sessionChip.refresh());
     this._input.addEventListener("input", () => this._updateSendState());
-    this._input.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
-      event.preventDefault();
-      this._submit();
-    });
+    this._sendOnEnter(() => this._submit());
     this._send = DomBuilder.el("button", "dock-send clay-button", "send");
     this._send.addEventListener("click", () => this._submit());
     this._attach = sdkAttachControl(this._chat,
-      () => this._targetName("sdk") ?? this._threadMod() ?? PLATFORM_UPLOAD_NAME, () => this._targetName("sdk"), this._input);
-    this._attach.bindAll(this._dock);
+      () => this._targetName("sdk") ?? this._paneTarget().mod ?? PLATFORM_UPLOAD_NAME,
+      () => this._targetName("sdk"), this._input);
+    this._attach.bindAll(this._chrome.dock);
     this._thread = DomBuilder.el("div", "dock-thread");
+    const actions = DomBuilder.el("div", "dock-actions");
+    actions.append(this._send, this._attach.node());
     this._target = new TargetPicker(() => this._onTargetPicked());
     this._sessionChip.start();
-    this._dock.append(this._head, this._chips, this._picker.node(), this._resume.node(), this._input, this._actionColumn(), this._target.node, this._thread);
+    this._chrome.dock.append(this._chrome.head, this._chrome.chipsNode, this._picker.node(),
+      this._resume.node(), this._input, actions, this._target.node, this._thread);
   }
 
-  _actionColumn() {
-    const column = DomBuilder.el("div", "dock-actions");
-    column.append(this._send, this._attach.node());
-    return column;
+  // ConversationPanel hooks: the popup draws the sdk thread itself, or clears
+  // and polls the pane thread (the pane draw lands after the refresh resolves).
+  _renderConversation(key) {
+    if (key !== null) return this._drawSdkThread(key);
+    this._thread.replaceChildren();
+    return this._refreshPaneThread();
+  }
+
+  _conversationOpened() {
+    this._updateSendState();
+  }
+
+  // Collapse is frame mechanics; expanding always opens the conversation.
+  _setExpanded(expanded) {
+    this._applyCollapsed(!expanded);
+    if (expanded) this.open(this._targetName("sdk"));
+  }
+
+  _applyCollapsed(collapsed) {
+    this._chrome.applyCollapsed(collapsed);
+    this._input.disabled = collapsed;
+    if (this._timer !== null) clearInterval(this._timer);
+    this._timer = null;
+    if (!collapsed) this._armTimer();
+  }
+
+  // Jump to a conversation from outside: show the popup with the target picked by hand.
+  openConversation(label) {
+    this._pickedByHand = true;
+    this._target.value = label;
+    this._setExpanded(true);
+  }
+
+  openAgentFolder(folder) {
+    const label = this._targets.paneLabelForFolder(folder) ?? this._defaultTarget();
+    this.openConversation(label);
   }
 
   _onTargetPicked() {
     this._pickedByHand = true;
-    this._thread.replaceChildren();
-    this._pinNextRender = true;
-    this._refreshThread();
+    this.open(this._targetName("sdk"));
   }
 
   async _loadTargets() {
@@ -121,7 +120,7 @@ export class MessageDock {
     this._targets.setPanes(this._panes);
     this._target.setNames(this._targets.labels());
     this._target.value = this._defaultTarget();
-    this._refreshThread();
+    this.open(this._targetName("sdk"));
   }
 
   async _loadPanes() {
@@ -149,75 +148,25 @@ export class MessageDock {
     return { name, mod: pane && pane.mod ? pane.mod : null };
   }
 
-  _threadMod() {
-    return this._paneTarget().mod;
-  }
-
-  _applyCollapsed(collapsed) {
-    this._dock.classList.toggle("is-collapsed", collapsed);
-    this._toggleButton.textContent = collapsed ? "message" : "message  ▾ hide";
-    this._toggleButton.setAttribute("aria-expanded", collapsed ? "false" : "true");
-    this._openDrag.reset();
-    this._openDrag.setPersistent(!collapsed);
-    if (collapsed) this._anchor.apply(this._dock, document);
-    else this._openDrag.restore();
-    this._resizeGrip.reset();
-    if (!collapsed) this._resizeGrip.restore();
-    try {
-      localStorage.setItem(COLLAPSED_KEY, collapsed ? "1" : "0");
-    } catch { /* storage unavailable: the state is not kept */ }
-    if (this._timer !== null) clearInterval(this._timer);
-    this._timer = null;
-    if (!collapsed) {
-      this._refreshThread();
-      this._armTimer();
-      requestAnimationFrame(() => this._input.focus({ preventScroll: true }));
-    }
-  }
-
-  // Jump to a conversation from outside: show the popup with the target picked by hand.
-  openConversation(label) {
-    this._pickedByHand = true;
-    this._target.value = label;
-    this._applyCollapsed(false);
-    this._pinNextRender = true;
-    this._updateSendState();
-    this._refreshThread();
-  }
-
-  openAgentFolder(folder) {
-    const label = this._targets.paneLabelForFolder(folder) ?? this._defaultTarget();
-    this.openConversation(label);
-  }
-
   _onContext(context) {
     const previousMod = this._context.mod;
     this._context = context;
-    this._redrawChips();
+    this._chrome.setChips(context);
     this._updateSendState();
     if (context.mod !== previousMod && !this._pickedByHand) {
       this._target.value = this._defaultTarget();
-      this._pinNextRender = true;
-      this._refreshThread();
+      this.open(this._targetName("sdk"));
     }
     this._pickedByHand = false;
   }
 
-  _redrawChips() {
-    const chips = CHIP_FIELDS.filter((field) => this._context[field] !== null)
-      .map((field) => DomBuilder.el("span", "dock-chip", `${field}: ${this._context[field]}`));
-    this._chips.replaceChildren(...chips);
-  }
-
   _updateSendState() {
-    const name = this._targetName("sdk");
-    const running = name !== null && this._chat.transcripts.isRunning(name);
-    this._send.disabled = this._input.value.trim() === "" || running;
+    this._send.disabled = this._input.value.trim() === "" || this._isRunning(this._key);
   }
 
   _submit() {
     if (this._send.disabled) return;
-    if (this._targetName("sdk") !== null) this._submitToSdk();
+    if (this._key !== null) this._submitToSdk();
     else this._submitToPane();
   }
 
@@ -251,7 +200,7 @@ export class MessageDock {
     const target = this._target.value || MAIN_TARGET;
     if (result.delivered) FlashMessage.shared().confirm(`Message sent to ${target}.`);
     else FlashMessage.shared().fail(`Message saved, but the ${target} pane was not reached.`);
-    return this._refreshThread();
+    return this._refreshPaneThread();
   }
 
   _failed(text) {
@@ -261,39 +210,30 @@ export class MessageDock {
   }
 
   _onTranscript(name) {
-    if (name !== this._targetName("sdk")) return;
-    this._refreshThread();
+    if (name !== this._key) return;
+    this._drawSdkThread(name);
     this._updateSendState();
-    if (!this._chat.transcripts.isRunning(name)) this._sessionChip.refresh();
+    if (this._isRunning(name)) return;
+    this._sessionChip.refresh();
+    if (!this._chrome.isCollapsed()) this.focusInput();
   }
 
   _armTimer() {
     this._timer = setInterval(() => {
-      if (this._targetName("sdk") === null) this._refreshPaneThread();
+      if (this._key === null) this._refreshPaneThread();
     }, RELOAD_MS);
   }
 
-  async _refreshThread() {
-    const name = this._targetName("sdk");
-    if (name === null) return this._refreshPaneThread();
-    this._chat.session.restore(name).then(() => this._chat.session.resume(name));
-    this._drawSdkThread(name);
-  }
-
   _drawSdkThread(name) {
-    const messages = this._chat.renderer.render(this._chat.transcripts.items(name), name);
-    const pill = WorkingPill.trailing(this._chat.transcripts.isRunning(name), name);
-    const agents = AgentsPill.trailing(this._agents.runningFor(name));
-    this._renderThread([...messages, ...pill, ...agents]);
+    this._renderThread(this._conversationNodes(name));
   }
 
   _onAgentsChange() {
-    const name = this._targetName("sdk");
-    const count = this._agents.runningFor(name ?? this._threadMod());
+    const count = this._agents.runningFor(this._key ?? this._paneTarget().mod);
     if (count === this._agentCount) return;
     this._agentCount = count;
-    if (name === null) this._refreshPaneThread();
-    else this._drawSdkThread(name);
+    if (this._key === null) this._refreshPaneThread();
+    else this._drawSdkThread(this._key);
   }
 
   _refreshPaneThread() {
@@ -301,9 +241,8 @@ export class MessageDock {
   }
 
   _renderThread(nodes) {
-    const wasNearBottom = this._pinNextRender || ScrollAnchor.isNearBottom(this._thread);
+    const wasNearBottom = ScrollAnchor.isNearBottom(this._thread);
     this._thread.replaceChildren(...nodes);
     ScrollAnchor.follow(this._thread, wasNearBottom);
-    this._pinNextRender = false;
   }
 }
