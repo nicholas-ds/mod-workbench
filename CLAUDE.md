@@ -1,6 +1,6 @@
 # CLAUDE.md: mod-workbench
 
-Local desktop platform on top of the Starfield mod repos. Read `docs/design.md` and `docs/game-testing.md` before you change anything. The plan is in `docs/superpowers/plans/`.
+Local desktop platform on top of the Starfield mod repos. Read `docs/game-testing.md` before you change anything.
 
 ## Architecture standards (enforced)
 
@@ -52,7 +52,7 @@ card = self.card_builder.build(front_matter)
 
 ## Worker task size (enforced)
 
-Give each GLM worker a small, scoped task. See `LESSONS.md`.
+Give each GLM worker a small, scoped task.
 - One kind of change per task. Name 3 to 5 files to edit.
 - Do not tell a worker to read large files. Put the needed values in the brief.
 - An empty reply or `finish: length` means the task was too big. Split it. Do not retry the same brief.

@@ -1,6 +1,6 @@
 # Game testing rules
 
-Status: draft for approval. Date: 2026-11-07. Part of `design.md` (rule R6).
+Status: draft for approval. Date: 2026-11-07. Rule R6.
 
 ## 1. Who may test
 

@@ -130,7 +130,7 @@ Write your status in `status/<workspace>.toml` (for example `status/build.toml`)
 
 Rule R6: only the orchestrator starts or tests the game, on a fresh copy of the frozen baseline save. See `docs/game-testing.md`. Workers never start the game. Workers write a test spec (`tests/<id>.yaml`) and a line in the status file under `test_requests`.
 
-Provisional: the build workspace runs game tests. The research workspace writes test specs and asks the build workspace. The author did not approve this yet (see `tracking.md`).
+Provisional: the build workspace runs game tests. The research workspace writes test specs and asks the build workspace. The author did not approve this yet.
 
 ## Add a new mod
 
@@ -167,7 +167,7 @@ epos` into a carriage return, and the receiver reads a broken path.
 
 ## Showing a menu SWF on a board
 
-Do not put a raw SWF on a board. It draws blank. Render a PNG with the owning repo's preview script (Logistics: `pwsh -File build/preview/preview.ps1 -View <name>`, ~15 s per view). Copy the PNG into the board folder and list it under `items`. Details: `LESSONS.md`, "SWF stills for the whiteboard".
+Do not put a raw SWF on a board. It draws blank. Render a PNG with the owning repo's preview script (Logistics: `pwsh -File build/preview/preview.ps1 -View <name>`, ~15 s per view). Copy the PNG into the board folder and list it under `items`.
 
 ## Stopping (enforced by a Stop hook, 2026-11-08)
 

@@ -1,6 +1,6 @@
 """Policy settings for the done-board archive.
 
-Spec: docs/board-archive-design.md, revision 1. Frozen settings shared by
+Spec: board archive, revision 1. Frozen settings shared by
 the scanner and archiver.
 """
 

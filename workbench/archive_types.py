@@ -1,6 +1,6 @@
 """Types for the done-board archive.
 
-Spec: docs/board-archive-design.md, revision 1. Frozen records describing
+Spec: board archive, revision 1. Frozen records describing
 one board candidate and the result of archiving a board.
 """
 

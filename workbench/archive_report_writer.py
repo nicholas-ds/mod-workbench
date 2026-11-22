@@ -1,6 +1,6 @@
 """Text report for the done-board archive run.
 
-Spec: docs/board-archive-design.md, revision 1. Pure formatting, no I/O.
+Spec: board archive, revision 1. Pure formatting, no I/O.
 """
 
 from __future__ import annotations

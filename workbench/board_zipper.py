@@ -1,6 +1,6 @@
 """Zips qualifying done boards losslessly.
 
-Spec: docs/board-archive-design.md, revision 1. Writes
+Spec: board archive, revision 1. Writes
 boards/archive/<board id>.zip, verifies it, and only then removes the
 board folder. Never raises; failures come back as an error string.
 """

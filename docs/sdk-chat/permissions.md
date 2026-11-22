@@ -1,6 +1,6 @@
 # SDK chat: permissions (Phase 2)
 
-Status: draft 1, 2026-11-11. SDK facts from `claude-agent-sdk` 0.2.180 source; paths below. See `design.md` and `docs/sdk-notes.md`.
+Status: draft 1, 2026-11-11. SDK facts from `claude-agent-sdk` 0.2.180 source; paths below.
 
 ## Problem
 

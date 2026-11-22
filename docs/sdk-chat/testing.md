@@ -53,12 +53,11 @@ These asserts are the R8 boundary contract. A Rust replacement must pass the sam
 One real SDK turn bills like a normal session. A cold spike run cost about 0.14 USD. Run all checks in one session, in this order:
 
 1. Skills load: the reply shows an `opencode-agent` skill use.
-2. The reply quotes the `CLAUDE.md` GLM rule. Still unverified per `sdk-notes.md`.
+2. The reply quotes the `CLAUDE.md` GLM rule. Still unverified.
 3. `/clear` drops the session id. The next message starts a new session id.
 4. Stop ends the turn and keeps the session id.
 5. A permission request shows Allow and Deny. The turn resumes after the choice.
 
-Record each result in `docs/sdk-notes.md`.
 
 ## Risks
 

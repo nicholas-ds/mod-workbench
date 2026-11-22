@@ -1,6 +1,6 @@
 """Scanner for qualifying done boards.
 
-Spec: docs/board-archive-design.md, revision 1. Finds done boards whose
+Spec: board archive, revision 1. Finds done boards whose
 newest file is old enough to archive. Read-only: nothing here writes to
 disk.
 """

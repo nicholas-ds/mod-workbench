@@ -1,6 +1,6 @@
 """Command that zips old done boards and reports the result.
 
-Spec: docs/board-archive-design.md, revision 1. Pure pipeline: no argparse
+Spec: board archive, revision 1. Pure pipeline: no argparse
 and no printing here; the caller wires, prints and maps the report to an
 exit code.
 """
