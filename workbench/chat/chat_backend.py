@@ -83,6 +83,10 @@ class ChatBackend(ABC):
     def is_running(self, name: str) -> bool:
         return self._book.is_running(name)
 
+    def context_percent(self, name: str) -> float | None:
+        """Context percent after the last finished turn; None when not measured."""
+        return None
+
     async def submit(self, name: str, text: str) -> None:
         """Start a turn for server-sent text, or queue it behind the running turn."""
         if self._book.is_running(name):
