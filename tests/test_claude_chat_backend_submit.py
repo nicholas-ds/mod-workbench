@@ -4,7 +4,14 @@ import asyncio
 from pathlib import Path
 
 from workbench.chat_command import COMMAND_CLEAR, COMMAND_PROMPT, ChatCommand
-from workbench.chat_event import KIND_NOTICE, KIND_RESULT, KIND_TEXT, KIND_USER, ChatEvent
+from workbench.chat_event import (
+    KIND_ERROR,
+    KIND_NOTICE,
+    KIND_RESULT,
+    KIND_TEXT,
+    KIND_USER,
+    ChatEvent,
+)
 from workbench.claude_chat_backend import ClaudeChatBackend
 from workbench.session_id_store import SessionIdStore
 
@@ -17,14 +24,14 @@ async def collect(
     return tuple([event async for event in runner.run(name, command)])
 
 
-async def test_two_turns_create_two_disconnected_clients(tmp_path: Path) -> None:
+async def test_second_turn_reuses_the_open_client(tmp_path: Path) -> None:
     store = SessionIdStore(tmp_path / "session_ids.json")
     runner, factory = make_runner(store, (make_result("s1"),))
     await collect(runner, "coder", ChatCommand(COMMAND_PROMPT, "one"))
     await collect(runner, "coder", ChatCommand(COMMAND_PROMPT, "two"))
-    assert len(factory.clients) == 2
-    assert all("disconnect" in client.calls for client in factory.clients)
-    assert factory.requested == [("coder", ""), ("coder", "s1")]
+    assert len(factory.clients) == 1
+    assert "disconnect" not in factory.clients[0].calls
+    assert factory.requested == [("coder", "")]
 
 
 async def test_is_running_tracks_a_turn() -> None:
@@ -65,11 +72,12 @@ async def test_submit_during_a_running_turn_queues_behind_it() -> None:
     assert tuple([event async for event in stream]) == (ChatEvent(KIND_RESULT),)
     while runner.is_running("coder"):
         await asyncio.sleep(0)
-    assert len(factory.clients) == 3
-    assert [client.calls for client in factory.clients] == [
-        ["connect", "query:first", "disconnect"],
-        ["connect", "query:queued one", "disconnect"],
-        ["connect", "query:queued two", "disconnect"],
+    assert len(factory.clients) == 1
+    assert factory.clients[0].calls == [
+        "connect",
+        "query:first",
+        "query:queued one",
+        "query:queued two",
     ]
     assert not runner.is_running("coder")
 
@@ -83,7 +91,8 @@ async def test_clear_drops_a_queued_text() -> None:
     notice = await collect(runner, "coder", ChatCommand(COMMAND_CLEAR, ""))
     assert notice == (ChatEvent(KIND_NOTICE, "Chat cleared."),)
     release.set()
-    assert tuple([event async for event in stream]) == (ChatEvent(KIND_RESULT),)
+    error = ChatEvent(KIND_ERROR, "The Claude session ended before the turn finished.")
+    assert tuple([event async for event in stream]) == (error,)
     assert not runner.is_running("coder")
     assert len(factory.clients) == 1
     assert factory.clients[0].calls == [

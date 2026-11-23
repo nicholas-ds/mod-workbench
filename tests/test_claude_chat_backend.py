@@ -52,13 +52,13 @@ async def test_clear_forgets_context_percent(tmp_path: Path) -> None:
     assert runner.context_percent("coder") is None
 
 
-async def test_each_turn_gets_a_fresh_client() -> None:
+async def test_second_turn_reuses_the_open_client() -> None:
     runner, factory = make_runner(SessionIdStore(None))
     await collect(runner, "coder", ChatCommand(COMMAND_PROMPT, "one"))
     await collect(runner, "coder", ChatCommand(COMMAND_PROMPT, "two"))
-    assert len(factory.clients) == 2
-    assert factory.clients[0].calls == ["connect", "query:one", "disconnect"]
-    assert factory.clients[1].calls == ["connect", "query:two", "disconnect"]
+    assert len(factory.clients) == 1
+    assert factory.clients[0].calls == [
+        "connect", "query:one", "context_usage", "query:two", "context_usage"]
 
 
 async def test_saved_session_id_is_passed_to_factory(tmp_path: Path) -> None:

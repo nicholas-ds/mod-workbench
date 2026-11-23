@@ -36,10 +36,14 @@ class FakeSessionLister:
 
 
 class FakeChatClient:
+    """Fake SDK client: one message batch per query, stream stays open."""
+
     def __init__(self, messages: tuple[object, ...] = (), fail: bool = False) -> None:
         self.messages = messages
         self.fail = fail
         self.calls: list[str] = []
+        self._turn_ready = asyncio.Event()
+        self._closed = False
 
     async def connect(self) -> None:
         self.calls.append("connect")
@@ -48,16 +52,24 @@ class FakeChatClient:
         self.calls.append(f"query:{prompt}")
         if self.fail:
             raise RuntimeError("boom")
+        self._turn_ready.set()
 
-    async def receive_response(self) -> AsyncIterator[object]:
-        for message in self.messages:
-            yield message
+    async def receive_messages(self) -> AsyncIterator[object]:
+        while True:
+            await self._turn_ready.wait()
+            if self._closed:
+                return
+            self._turn_ready.clear()
+            for message in self.messages:
+                yield message
 
     async def interrupt(self) -> None:
         self.calls.append("interrupt")
 
     async def disconnect(self) -> None:
         self.calls.append("disconnect")
+        self._closed = True
+        self._turn_ready.set()
 
     async def get_server_info(self) -> dict[str, object] | None:
         self.calls.append("server_info")
@@ -99,7 +111,7 @@ def make_result(session_id: str) -> ResultMessage:
 
 def make_runner(
     store: SessionIdStore,
-    messages: tuple[object, ...] = (),
+    messages: tuple[object, ...] = (make_result("s1"),),
     fail: bool = False,
     session_lister: FakeSessionLister | None = None,
 ) -> tuple[ClaudeChatBackend, FakeClientFactory]:
@@ -120,28 +132,40 @@ def make_runner(
 
 
 class HeldChatClient:
+    """Fake client that holds each turn open until the test releases it."""
+
     def __init__(self, release: asyncio.Event, messages: tuple[object, ...]) -> None:
         self.release = release
         self.messages = messages
         self.calls: list[str] = []
+        self._turn_ready = asyncio.Event()
+        self._closed = False
 
     async def connect(self) -> None:
         self.calls.append("connect")
 
     async def query(self, prompt: str) -> None:
         self.calls.append(f"query:{prompt}")
+        self._turn_ready.set()
 
-    async def receive_response(self) -> AsyncIterator[object]:
-        yield make_assistant("hi")
-        await self.release.wait()
-        for message in self.messages:
-            yield message
+    async def receive_messages(self) -> AsyncIterator[object]:
+        while True:
+            await self._turn_ready.wait()
+            if self._closed:
+                return
+            self._turn_ready.clear()
+            yield make_assistant("hi")
+            await self.release.wait()
+            for message in self.messages:
+                yield message
 
     async def interrupt(self) -> None:
         self.calls.append("interrupt")
 
     async def disconnect(self) -> None:
         self.calls.append("disconnect")
+        self._closed = True
+        self._turn_ready.set()
 
 
 class HeldClientFactory:
@@ -160,7 +184,7 @@ class HeldClientFactory:
 
 def make_held_runner(
     release: asyncio.Event,
-    messages: tuple[object, ...] = (),
+    messages: tuple[object, ...] = (make_result("s1"),),
     session_lister: FakeSessionLister | None = None,
 ) -> tuple[ClaudeChatBackend, HeldClientFactory]:
     factory = HeldClientFactory(release, messages)

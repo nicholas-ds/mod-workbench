@@ -90,6 +90,14 @@ class ClaudeSessionHolder:
         for name in list(self._clients):
             await self.close(name)
 
+    async def close_unless_busy(self, name: str) -> None:
+        """Close the chat when no background job of it is running."""
+        if not self._has_running_jobs(name):
+            await self.close(name)
+
+    def reader_of(self, name: str) -> asyncio.Task[None] | None:
+        return self._readers.get(name)
+
     def pid_of(self, name: str) -> int | None:
         return self._pid_file.load(name)
 
@@ -131,9 +139,12 @@ class ClaudeSessionHolder:
     async def _close_when_idle(self, name: str) -> None:
         while True:
             await asyncio.sleep(self._idle_seconds)
-            if not self._job_book.running(self._job_store.load(name)):
+            if not self._has_running_jobs(name):
                 break
         await self.close(name)
+
+    def _has_running_jobs(self, name: str) -> bool:
+        return bool(self._job_book.running(self._job_store.load(name)))
 
     def _cancel_timer(self, name: str) -> None:
         timer = self._timers.pop(name, None)

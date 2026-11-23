@@ -27,7 +27,6 @@ async def test_handoff_is_sent_before_the_prompt(tmp_path: Path) -> None:
         "connect",
         f"query:{BLOCK}\n\nhello",
         "context_usage",
-        "disconnect",
     ]
     assert [event.kind for event in events] == ["handoff", KIND_TEXT, KIND_RESULT]
 
@@ -40,7 +39,6 @@ async def test_no_handoff_sends_the_bare_prompt() -> None:
         "connect",
         "query:hello",
         "context_usage",
-        "disconnect",
     ]
     assert events == (ChatEvent(KIND_TEXT, "hi"), ChatEvent(KIND_RESULT))
 
@@ -51,15 +49,11 @@ async def test_handoff_is_taken_once() -> None:
     runner.receive_handoff("coder", BLOCK)
     await collect(runner, "coder", ChatCommand(COMMAND_PROMPT, "one"))
     await collect(runner, "coder", ChatCommand(COMMAND_PROMPT, "two"))
+    assert len(factory.clients) == 1
     assert factory.clients[0].calls == [
         "connect",
         f"query:{BLOCK}\n\none",
         "context_usage",
-        "disconnect",
-    ]
-    assert factory.clients[1].calls == [
-        "connect",
         "query:two",
         "context_usage",
-        "disconnect",
     ]

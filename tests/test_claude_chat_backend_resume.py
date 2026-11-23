@@ -30,7 +30,7 @@ async def test_resume_saves_id_and_drops_client(tmp_path: Path) -> None:
         store, (make_result("s1"),), session_lister=lister)
     await collect(runner, "coder", ChatCommand(COMMAND_PROMPT, "hello"))
     assert runner.context_percent("coder") == 12.5
-    client = await runner._connected_client("coder")
+    client = await runner._holder.open("coder", runner._permission_callback("coder"))
     assert await runner.resume_session("coder", "E:/m", "s9") is True
     assert store.load("coder") == "s9"
     assert "disconnect" in client.calls

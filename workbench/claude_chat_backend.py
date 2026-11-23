@@ -1,9 +1,10 @@
-"""Run chat turns against one Claude client per named session (rule R8).
+"""Run chat turns against one open Claude client per named chat (rule R8).
 
-Each turn drops the previous client and connects a fresh one with the stored
-session id, so the SDK session resumes. The turn lifecycle (pumps, queues,
-permission holds) lives in the base ChatBackend; this subclass does only the
-Claude SDK I/O: connect, query, translate, interrupt and the read views.
+The ClaudeSessionHolder keeps one client and one reader task per chat: the
+reader translates every stream message into the shared TurnBook. The turn
+lifecycle (pumps, queues, permission holds) lives in the base ChatBackend;
+this subclass sends the prompt, waits for the turn's ResultMessage and does
+the Claude SDK I/O: interrupt and the read views.
 """
 
 from __future__ import annotations
@@ -24,7 +25,11 @@ from claude_agent_sdk import (
 from workbench.chat_backend import BackendTraits, ChatBackend, SessionView
 from workbench.chat_event import ChatEvent
 from workbench.chat_history_loader import ChatHistoryLoader
+from workbench.chat_job_book import ChatJobBook
+from workbench.chat_job_store import ChatJobStore
 from workbench.claude_sdk_translator import ClaudeSdkTranslator
+from workbench.claude_session_holder import ClaudeSessionHolder
+from workbench.cli_pid_file import CliPidFile
 from workbench.permission_card_builder import PermissionCardBuilder
 from workbench.pending_permission_store import PendingPermissionStore
 from workbench.session_history_lister import SessionHistoryLister
@@ -38,7 +43,7 @@ from workbench.turn_event_log import TurnEventLog
 class ChatClient(Protocol):
     async def connect(self) -> None: ...
     async def query(self, prompt: str) -> None: ...
-    async def receive_response(self) -> AsyncIterator[object]: ...
+    async def receive_messages(self) -> AsyncIterator[object]: ...
     async def interrupt(self) -> None: ...
     async def disconnect(self) -> None: ...
     async def get_server_info(self) -> dict[str, object] | None: ...
@@ -65,11 +70,12 @@ class ClaudeChatBackend(ChatBackend):
         timeout_seconds: float = 600.0,
         on_permission_wait: Callable[[str, str], None] = lambda name, tool_name: None,
         alert_after_seconds: float = 30.0,
+        job_store: ChatJobStore | None = None,
+        pid_file: CliPidFile | None = None,
+        idle_seconds: float = 300.0,
     ) -> None:
         super().__init__(book, permissions)
-        self._client_factory = client_factory
         self._store = store
-        self._translator = translator
         self._cards = cards
         self._timeout_seconds = timeout_seconds
         self._on_permission_wait = on_permission_wait
@@ -77,7 +83,12 @@ class ClaudeChatBackend(ChatBackend):
         self._history_loader = history_loader
         self._slash_lister = slash_lister
         self._session_lister = session_lister
-        self._clients: dict[str, ChatClient] = {}
+        self._holder = ClaudeSessionHolder(
+            client_factory, store, translator, book, ChatJobBook(),
+            job_store or ChatJobStore(None), pid_file or CliPidFile(None),
+            self._finish_result, idle_seconds,
+        )
+        self._turn_ends: dict[str, asyncio.Future[None]] = {}
         self._context_percent: dict[str, float] = {}
 
     @property
@@ -122,47 +133,63 @@ class ClaudeChatBackend(ChatBackend):
         listed = await self.sessions(name, folder)
         if session_id not in {row.session_id for row in listed}:
             return False
-        await self._drop_client(name)
+        await self._holder.close(name)
         self._context_percent.pop(name, None)
         self._store.save(name, session_id)
         return True
 
     async def server_info(self, name: str) -> dict[str, object] | None:
         """Return the server init info. An idle client is dropped again so terminal turns stay visible."""
-        client = await self._connected_client(name)
+        client = await self._holder.open(name, self._permission_callback(name))
         info = await client.get_server_info()
         if not self._book.is_running(name):
-            await self._drop_client(name)
+            await self._holder.close_unless_busy(name)
         return info
 
     async def _turn(
         self, name: str, prompt: str, log: TurnEventLog, handoff: str
     ) -> None:
         try:
-            client = await self._connected_client(name)
+            await self._holder.open(name, self._permission_callback(name))
             if handoff:
                 self._announce_handoff(log, handoff)
-            await client.query(f"{handoff}\n\n{prompt}" if handoff else prompt)
-            async for message in client.receive_response():
-                if isinstance(message, ResultMessage):
-                    self._store.save(name, message.session_id)
-                    await self._remember_context_percent(name, client)
-                for event in self._translator.translate(message):
-                    log.append(event)
+            text = f"{handoff}\n\n{prompt}" if handoff else prompt
+            ended = asyncio.get_running_loop().create_future()
+            self._turn_ends[name] = ended
+            await self._holder.send(name, text)
+            await self._wait_for_result(name, ended)
         except Exception:
-            await self._drop_client(name)
+            await self._holder.close(name)
             raise
         finally:
-            await self._drop_client(name)
+            self._turn_ends.pop(name, None)
+
+    async def _wait_for_result(self, name: str, ended: asyncio.Future[None]) -> None:
+        waits: list[asyncio.Future[None] | asyncio.Task[None]] = [ended]
+        reader = self._holder.reader_of(name)
+        if reader is not None:
+            waits.append(reader)
+        await asyncio.wait(waits, return_when=asyncio.FIRST_COMPLETED)
+        if not ended.done():
+            raise RuntimeError("The Claude session ended before the turn finished.")
+
+    async def _finish_result(self, name: str, message: ResultMessage) -> None:
+        self._store.save(name, message.session_id)
+        client = self._holder.client_of(name)
+        if client is not None:
+            await self._remember_context_percent(name, client)
+        ended = self._turn_ends.get(name)
+        if ended is not None and not ended.done():
+            ended.set_result(None)
 
     async def _interrupt(self, name: str) -> None:
-        client = self._clients.get(name)
+        client = self._holder.client_of(name)
         if client is None:
             return
         await client.interrupt()
 
     async def _forget(self, name: str) -> None:
-        await self._drop_client(name)
+        await self._holder.close(name)
         self._context_percent.pop(name, None)
         self._store.forget(name)
 
@@ -200,22 +227,3 @@ class ClaudeChatBackend(ChatBackend):
         if outcome == "timed out":
             return PermissionResultDeny(message="The author did not answer in time.")
         return PermissionResultDeny(message="The author denied this request.")
-
-    async def _connected_client(self, name: str) -> ChatClient:
-        client = self._clients.get(name)
-        if client is None:
-            client = self._client_factory(
-                name, self._store.load(name), self._permission_callback(name)
-            )
-            await client.connect()
-            self._clients[name] = client
-        return client
-
-    async def _drop_client(self, name: str) -> None:
-        client = self._clients.pop(name, None)
-        if client is None:
-            return
-        try:
-            await client.disconnect()
-        except Exception:
-            pass

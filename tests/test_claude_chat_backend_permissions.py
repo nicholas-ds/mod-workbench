@@ -16,6 +16,7 @@ from workbench.chat_command import COMMAND_PROMPT, ChatCommand
 from workbench.chat_event import (
     KIND_PERMISSION,
     KIND_PERMISSION_SETTLED,
+    KIND_RESULT,
     KIND_TEXT,
     ChatEvent,
 )
@@ -27,7 +28,7 @@ from workbench.session_id_store import SessionIdStore
 from workbench.slash_command_lister import SlashCommandLister
 from workbench.turn_book import TurnBook
 
-from runner_fakes import StubHistoryLoader, FakeSessionLister
+from runner_fakes import StubHistoryLoader, FakeSessionLister, make_result
 
 
 class FakeToolContext:
@@ -40,21 +41,32 @@ class PermissionChatClient:
     def __init__(self, can_use_tool: CanUseTool | None = None) -> None:
         self.can_use_tool = can_use_tool
         self.permission_result: PermissionResult | None = None
+        self._turn_ready = asyncio.Event()
+        self._closed = False
 
     async def connect(self) -> None: ...
 
-    async def query(self, prompt: str) -> None: ...
+    async def query(self, prompt: str) -> None:
+        self._turn_ready.set()
 
-    async def receive_response(self) -> AsyncIterator[object]:
-        if self.can_use_tool is not None:
-            self.permission_result = await self.can_use_tool(
-                "Bash", {"command": "git status"}, FakeToolContext()
-            )
-        yield AssistantMessage(content=[TextBlock(text="done")], model="m")
+    async def receive_messages(self) -> AsyncIterator[object]:
+        while True:
+            await self._turn_ready.wait()
+            if self._closed:
+                return
+            self._turn_ready.clear()
+            if self.can_use_tool is not None:
+                self.permission_result = await self.can_use_tool(
+                    "Bash", {"command": "git status"}, FakeToolContext()
+                )
+            yield AssistantMessage(content=[TextBlock(text="done")], model="m")
+            yield make_result("s1")
 
     async def interrupt(self) -> None: ...
 
-    async def disconnect(self) -> None: ...
+    async def disconnect(self) -> None:
+        self._closed = True
+        self._turn_ready.set()
 
 
 class PermissionClientFactory:
@@ -106,7 +118,7 @@ async def test_permission_card_is_streamed_before_the_reply() -> None:
     assert settled == ChatEvent(KIND_PERMISSION_SETTLED, "allowed", "", card.detail)
     text = await stream.__anext__()
     assert text == ChatEvent(KIND_TEXT, "done")
-    assert tuple([event async for event in stream]) == ()
+    assert tuple([event async for event in stream]) == (ChatEvent(KIND_RESULT),)
 
 
 async def test_allow_gives_an_allow_result() -> None:

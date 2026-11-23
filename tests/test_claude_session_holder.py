@@ -147,3 +147,15 @@ async def test_idle_close_completes_a_disconnect_that_awaits(tmp_path: Path) -> 
     client.feed(make_result("s1"))
     assert await wait_for(lambda: "disconnect" in client.calls)
     assert holder.pid_of(NAME) is None
+
+
+async def test_close_unless_busy_keeps_chat_with_running_job(tmp_path: Path) -> None:
+    holder, _factory, _recorder, jobs, _book = make_holder(tmp_path)
+    await holder.open(NAME, unused_permission)
+    jobs.save(NAME, running_job())
+    await holder.close_unless_busy(NAME)
+    assert holder.client_of(NAME) is not None
+    jobs.save(NAME, ())
+    await holder.close_unless_busy(NAME)
+    assert holder.client_of(NAME) is None
+    assert holder.reader_of(NAME) is None
