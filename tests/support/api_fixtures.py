@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from workbench.__main__ import WorkbenchParts
+from workbench.server.workbench_parts import WorkbenchParts
 
 MOD_TOML = """\
 name = "CityMod"

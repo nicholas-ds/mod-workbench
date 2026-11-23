@@ -5,7 +5,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from workbench.__main__ import WorkbenchParts
+from workbench.server.workbench_parts import WorkbenchParts
 
 WEB_DIR = Path(__file__).resolve().parents[2] / "web"
 FORBIDDEN = ("Naming", "Game design", "CityBuilder", "Starfield")

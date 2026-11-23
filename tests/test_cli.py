@@ -4,7 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from workbench.__main__ import DEFAULT_PORT, PortChooser, WorkbenchCommands, WorkbenchServer
+from workbench.__main__ import PortChooser, WorkbenchCommands
+from workbench.server.serve_settings import DEFAULT_PORT
+from workbench.server.workbench_server import WorkbenchServer
 
 
 def test_init_subcommand_creates_config_and_folders(tmp_path: Path,

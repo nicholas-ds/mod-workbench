@@ -3,42 +3,18 @@
 from __future__ import annotations
 
 import argparse
-import asyncio
 import os
 import sys
-from collections.abc import AsyncIterator, Callable
-from contextlib import asynccontextmanager
 from pathlib import Path
 
-import uvicorn
-from fastapi import FastAPI
-
-from workbench.boards.alerts import NewBoardTracker, ToastNotifier, ToastSourceDetector
 from workbench.archive.archive_command import build_archive_command
-from workbench.boards.answer_store import AnswerStore
-from workbench.web.api import ApiFactory
 from workbench.boards.board_builder import BoardBuilder
 from workbench.boards.board_check import BoardValidator
-from workbench.boards.board_lifecycle import BoardLifecycle
-from workbench.boards.board_repository import OPEN_STATE, BoardRepository
-from workbench.boards.board_types import BoardEntry
-from workbench.core.config import ConfigError, ModConfig, ModConfigLoader, ModDiscovery
+from workbench.boards.board_repository import BoardRepository
 from workbench.boards.front_matter import FrontMatterParser
-from workbench.boards.item_files import ItemKindDetector, SafeItemResolver
+from workbench.core.config import ConfigError, ModConfig, ModConfigLoader
 from workbench.mods.mod_init import ModInitializer
-from workbench.mods.mod_registry import ModRegistry
-from workbench.boards.note_writer import NoteWriter
-from workbench.boards.queue import QueueSorter
-from workbench.boards.rework import LogAppender, ReworkBriefWriter
-from workbench.mods.status import StatusReader, WorkerExtractor
-from workbench.core.tables import TableBuilder
-from workbench.core.watch import FileChangeWatcher
-
-ROOTS_ENV = "WORKBENCH_ROOTS"
-DEFAULT_ROOTS = str(Path(__file__).resolve().parents[2])
-HOST = "127.0.0.1"
-PORT_ENV = "WORKBENCH_PORT"
-DEFAULT_PORT = 8760
+from workbench.server.serve_settings import DEFAULT_PORT, DEFAULT_ROOTS, PORT_ENV, ROOTS_ENV
 
 
 class BadPortError(ValueError):
@@ -79,97 +55,6 @@ class RootEnv:
         return [Path(part) for part in raw.split(os.pathsep) if part.strip()]
 
 
-class WorkbenchParts:
-    """Compose the default workbench parts."""
-
-    def __init__(self) -> None:
-        self.repository = BoardRepository(FrontMatterParser(), BoardBuilder())
-        self.answers = AnswerStore()
-        self.factory = ApiFactory(
-            discovery=ModDiscovery(ModConfigLoader()),
-            boards=self.repository,
-            answers=self.answers,
-            lifecycle=BoardLifecycle(),
-            sorter=QueueSorter(),
-            table_builder=TableBuilder(),
-            rework_writer=ReworkBriefWriter(LogAppender()),
-            note_writer=NoteWriter(),
-            status_reader=StatusReader(),
-            worker_extractor=WorkerExtractor(),
-            resolver=SafeItemResolver(),
-            kinds=ItemKindDetector(),
-            watcher=FileChangeWatcher(),
-        )
-
-    def registry(self, roots: list[Path]) -> ModRegistry:
-        return ModRegistry(ModDiscovery(ModConfigLoader()), roots,
-                           self.repository, self.answers)
-
-
-class BlockingBoardAlerter:
-    """Watch the roots and toast once for each new blocking board."""
-
-    def __init__(self, watcher: FileChangeWatcher, registry: ModRegistry,
-                 roots: list[Path], tracker: NewBoardTracker,
-                 notifier: ToastNotifier) -> None:
-        self._watcher, self._registry = watcher, registry
-        self._roots, self._tracker, self._notifier = roots, tracker, notifier
-
-    async def run(self) -> None:
-        async for _batch in self._watcher.changes(self._roots):
-            self._alert_fresh()
-
-    def _alert_fresh(self) -> None:
-        for entry in self._tracker.new_blocking(self._open_entries()):
-            self._notifier.notify("Blocking board", entry.board.title)
-
-    def _open_entries(self) -> list[BoardEntry]:
-        return [entry for cfg in self._mods() for entry in self._entries_of(cfg)]
-
-    def _mods(self) -> list[ModConfig]:
-        return [result for result in self._registry.all() if isinstance(result, ModConfig)]
-
-    def _entries_of(self, cfg: ModConfig) -> list[BoardEntry]:
-        listed = self._registry.entries(cfg, OPEN_STATE)
-        return [entry for entry in listed if isinstance(entry, BoardEntry)]
-
-
-class WorkbenchServer:
-    """Compose the app, wire the alert loop and serve it with uvicorn."""
-
-    def __init__(self) -> None:
-        self._alert_task: asyncio.Task[None] | None = None
-
-    def run(self, port: int) -> None:
-        uvicorn.run(self._app(), host=HOST, port=port, log_level="warning")
-
-    def _app(self) -> FastAPI:
-        roots = RootEnv(ROOTS_ENV, DEFAULT_ROOTS).read()
-        parts = WorkbenchParts()
-        app = parts.factory.create_app(roots)
-        app.router.lifespan_context = self._lifespan(self._alerter(parts, roots))
-        return app
-
-    def _lifespan(self, alerter: BlockingBoardAlerter) -> Callable[[FastAPI], AsyncIterator[None]]:
-        @asynccontextmanager
-        async def context(_app: FastAPI) -> AsyncIterator[None]:
-            self._alert_task = asyncio.create_task(alerter.run())
-            yield
-            if self._alert_task is not None:
-                self._alert_task.cancel()
-
-        return context
-
-    def _alerter(self, parts: WorkbenchParts, roots: list[Path]) -> BlockingBoardAlerter:
-        return BlockingBoardAlerter(
-            watcher=FileChangeWatcher(),
-            registry=parts.registry(roots),
-            roots=roots,
-            tracker=NewBoardTracker(),
-            notifier=ToastNotifier(ToastSourceDetector().detect()),
-        )
-
-
 class WorkbenchCommands:
     """Parse argv and run one subcommand: serve (default), init, check or archive."""
 
@@ -204,6 +89,8 @@ class WorkbenchCommands:
         return parser.parse_args(argv)
 
     def _run_serve(self, args: argparse.Namespace) -> int:
+        from workbench.server.workbench_server import WorkbenchServer
+
         env_port = os.environ.get(PORT_ENV)
         try:
             port = PortChooser(DEFAULT_PORT).choose(args.port, env_port)
