@@ -11,14 +11,15 @@ from pydantic import BaseModel, ConfigDict
 
 from workbench.boards.answer_store import AnswerStore
 from workbench.boards.board_lifecycle import BoardLifecycle
-from workbench.boards.board_notifier import (ANSWERS_EVENT, CLOSED_EVENT, REOPENED_EVENT,
-                                      BoardNotifier, NoteNotice)
-from workbench.web.board_records import BoardRecords
 from workbench.boards.board_repository import DONE_STATE, OPEN_STATE
 from workbench.boards.board_types import Answer, Board, BoardEntry, BoardError
 from workbench.core.config import ModConfig
 from workbench.boards.item_files import ItemKindDetector
 from workbench.mods.mod_registry import ModRegistry
+from workbench.notices.board_notice_sender import BoardNoticeSender
+from workbench.notices.notice_events import (ANSWERS_EVENT, CLOSED_EVENT,
+                                             NoteNotice, REOPENED_EVENT)
+from workbench.web.board_records import BoardRecords
 from workbench.boards.note_writer import NoteWriter
 from workbench.boards.queue import BlockingRule, QueueSorter
 from workbench.boards.rework import ReworkBriefWriter
@@ -55,7 +56,7 @@ class BoardsRoutes:
                  lifecycle: BoardLifecycle, rework_writer: ReworkBriefWriter,
                  note_writer: NoteWriter, kinds: ItemKindDetector,
                  blocking: BlockingRule | None = None,
-                 notifier: BoardNotifier | None = None) -> None:
+                 notifier: BoardNoticeSender | None = None) -> None:
         self._registry, self._answers, self._lifecycle = registry, answers, lifecycle
         self._rework_writer, self._note_writer = rework_writer, note_writer
         self._notifier = notifier

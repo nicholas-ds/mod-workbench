@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import time
+import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
@@ -12,7 +14,6 @@ from workbench.agents.agent_registry import AgentRegistry
 from workbench.agents.agent_store import AgentStore
 from workbench.boards.answer_store import AnswerStore
 from workbench.boards.board_lifecycle import BoardLifecycle
-from workbench.boards.board_notifier import BoardNotifier
 from workbench.boards.board_repository import BoardRepository
 from workbench.core.config import ModDiscovery
 from workbench.agents.claude_translator import ClaudeEventTranslator
@@ -35,6 +36,8 @@ from workbench.boards.note_writer import NoteWriter
 from workbench.agents.opencode_translator import OpencodeEventTranslator
 from workbench.chat.orchestrator_directory import OrchestratorDirectory
 from workbench.mods.pane_directory import PaneDirectory
+from workbench.notices.board_notice_sender import BoardNoticeSender
+from workbench.notices.notice_dispatcher_factory import NoticeDispatcherFactory
 from workbench.panes.pane_registry import PaneRegistry
 from workbench.panes.pane_sender import PaneSender
 from workbench.chat.pending_permission_store import PendingPermissionStore
@@ -86,6 +89,14 @@ def _clock_ms() -> int:
     return int(time.time() * 1000)
 
 
+def _utc_now() -> str:
+    return datetime.now(UTC).isoformat(timespec="seconds")
+
+
+def _new_id() -> str:
+    return uuid.uuid4().hex
+
+
 class ApiFactory:
     """Assemble the FastAPI app from the workbench parts."""
 
@@ -114,11 +125,15 @@ class ApiFactory:
 
     def _routers(self, registry: ModRegistry, roots: list[Path]) -> list[APIRouter]:
         directory = OrchestratorDirectory(registry, roots[0])
+        pane_directory = PaneDirectory(registry, _workbench_root())
         permissions = PendingPermissionStore()
         cards = PermissionCardBuilder()
         stack = ChatAssembly().build(
             directory, roots[0], _workbench_root() / "status", permissions, cards)
         sink = RunnerChatTurnSink(stack.resolver, directory)
+        factory = NoticeDispatcherFactory(pane_directory, PaneSender(), sink,
+                                          stack.threads, stack.resolver,
+                                          _utc_now, _new_id)
         scanner = HandoffScanner(registry, "StarfieldModResearch", OpenRequestReader(),
                                  UnpickedFileFinder(), BoardTextReader(), TrackingTextReader())
         groups = [
@@ -126,14 +141,13 @@ class ApiFactory:
                        BusyWorkerCounter(OpencodePortFinder(), OpencodeSessionClient())),
             BoardsRoutes(registry, self._sorter, self._table_builder, self._answers,
                          self._lifecycle, self._rework_writer, self._note_writer,
-                         self._kinds, notifier=BoardNotifier(PaneSender(),
-                                                             chat_sink=sink)),
+                         self._kinds, notifier=BoardNoticeSender(factory)),
             ItemsRoutes(registry, self._resolver, self._kinds, HtmlItemStyler(_web_dir())),
             MessagesRoutes(registry, MessageWriter(),
                            pane_registry=PaneRegistry(_orchestrator_pane_file()),
                            pane_sender=PaneSender(),
                            workbench_root=_workbench_root(),
-                           pane_directory=PaneDirectory(registry, _workbench_root())),
+                           pane_directory=pane_directory),
             DetailRoutes(registry, ModDetailReader()),
             OverviewRoutes(registry, TaskOverviewReader(), roots[0] / "tracking.md"),
             EventsRoutes(self._watcher, registry),

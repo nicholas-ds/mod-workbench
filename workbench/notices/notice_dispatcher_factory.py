@@ -82,7 +82,7 @@ class NoticeDispatcherFactory:
         return NoticeDispatcher(
             owner_resolver=OwnerResolver(
                 BoardOwnerStore(), fallback=OwnerId(OwnerKind.PANE, ORCHESTRATOR_NAME)),
-            composer=NoticeComposer(), inbox=OwnerInbox(cfg.status / "inbox"),
+            composer=NoticeComposer(), inbox=OwnerInbox(cfg.repo / "status" / "inbox"),
             recipient_resolver=RecipientResolver({OwnerKind.PANE: pane_recipient,
                                                   OwnerKind.CHAT: chat_recipient}),
             context_policy=ContextPolicy(), fresh_prompt=FreshStartPrompt(),

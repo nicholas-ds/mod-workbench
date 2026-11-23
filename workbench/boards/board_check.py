@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from workbench.boards.board_notifier import CHAT_PREFIX
 from workbench.boards.board_repository import BoardRepository
 from workbench.boards.board_types import Board, BoardError
 from workbench.boards.image_framing import ImageFramingChecker
-from workbench.panes.pane_registry import PaneRegistry
 
 BASE_STYLE_MARKER = "workbench-base-style"
 STATUS_BOARD_ID = "mod-status"
+CHAT_PREFIX = "chat-"
 
 
 class BoardValidator:
@@ -31,7 +30,6 @@ class BoardValidator:
             return (self._error_line(exc),)
         return (self._missing_item_lines(board) + self._unstyled_html_lines(board)
                 + self._off_center_image_lines(board)
-                + self._unregistered_pane_lines(board)
                 + self._wrong_status_chat_lines(board))
 
     def _error_line(self, exc: BoardError) -> str:
@@ -60,20 +58,6 @@ class BoardValidator:
             if item.file.endswith(".png") and (board.folder / item.file).is_file()
             for problem in self._framing_checker.problems(board.folder / item.file)
         )
-
-    def _unregistered_pane_lines(self, board: Board) -> tuple[str, ...]:
-        if self._status_dir is None or board.raised_by is None:
-            return ()
-        if board.raised_by.startswith(CHAT_PREFIX):
-            if len(board.raised_by) == len(CHAT_PREFIX):
-                return (f"{board.id}: raised_by 'chat-' has no chat name. "
-                        "Use chat-<name>, for example chat-main.",)
-            return ()
-        pane_file = self._status_dir / f"{board.raised_by}.toml"
-        if PaneRegistry(pane_file).find() is not None:
-            return ()
-        return (f"{board.id}: no pane registered for raised_by '{board.raised_by}'. "
-                f"Add wmux_surface to {pane_file}, or the agent is never told.",)
 
     def _wrong_status_chat_lines(self, board: Board) -> tuple[str, ...]:
         if board.id != STATUS_BOARD_ID or self._mod_name is None:

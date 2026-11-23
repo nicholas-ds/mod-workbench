@@ -58,29 +58,6 @@ def test_check_reports_each_problem(tmp_path: Path) -> None:
     assert "sketch.html" in problems[1]
 
 
-def test_check_reports_raised_by_without_registered_pane(tmp_path: Path) -> None:
-    folder = write_board(tmp_path / "board-1", GOOD_BOARD.replace("items:", "raised_by: ghost\nitems:"))
-    (folder / "shot.png").write_bytes(b"png")
-    (folder / "sketch.html").write_text("<!-- workbench-base-style --><p>wide</p>", encoding="utf-8")
-    repository = BoardRepository(FrontMatterParser(), BoardBuilder())
-
-    problems = BoardValidator(repository, tmp_path / "status").check(folder)
-
-    assert len(problems) == 1
-    assert "no pane registered for raised_by 'ghost'" in problems[0]
-
-
-def test_check_accepts_raised_by_with_registered_pane(tmp_path: Path) -> None:
-    folder = write_board(tmp_path / "board-1", GOOD_BOARD.replace("items:", "raised_by: workbench\nitems:"))
-    (folder / "shot.png").write_bytes(b"png")
-    (folder / "sketch.html").write_text("<!-- workbench-base-style --><p>wide</p>", encoding="utf-8")
-    (tmp_path / "status").mkdir()
-    (tmp_path / "status" / "workbench.toml").write_text('wmux_surface = "surf-1"\n', encoding="utf-8")
-    repository = BoardRepository(FrontMatterParser(), BoardBuilder())
-
-    assert BoardValidator(repository, tmp_path / "status").check(folder) == ()
-
-
 def test_check_reports_html_item_without_base_style(tmp_path: Path) -> None:
     folder = write_board(tmp_path / "board-1")
     (folder / "shot.png").write_bytes(b"png")
@@ -90,31 +67,6 @@ def test_check_reports_html_item_without_base_style(tmp_path: Path) -> None:
 
     assert len(problems) == 1
     assert "base style" in problems[0]
-
-
-def test_check_accepts_chat_raised_by_without_status_file(tmp_path: Path) -> None:
-    folder = write_board(tmp_path / "board-1",
-                         GOOD_BOARD.replace("items:", "raised_by: chat-main\nitems:"))
-    (folder / "shot.png").write_bytes(b"png")
-    (folder / "sketch.html").write_text("<!-- workbench-base-style --><p>wide</p>",
-                                        encoding="utf-8")
-    repository = BoardRepository(FrontMatterParser(), BoardBuilder())
-
-    assert BoardValidator(repository, tmp_path / "status").check(folder) == ()
-
-
-def test_check_reports_bare_chat_prefix(tmp_path: Path) -> None:
-    folder = write_board(tmp_path / "board-1",
-                         GOOD_BOARD.replace("items:", "raised_by: chat-\nitems:"))
-    (folder / "shot.png").write_bytes(b"png")
-    (folder / "sketch.html").write_text("<!-- workbench-base-style --><p>wide</p>",
-                                        encoding="utf-8")
-    repository = BoardRepository(FrontMatterParser(), BoardBuilder())
-
-    problems = BoardValidator(repository, tmp_path / "status").check(folder)
-
-    assert problems == ("board-1: raised_by 'chat-' has no chat name. "
-                        "Use chat-<name>, for example chat-main.",)
 
 
 def make_named_validator(mod_name: str) -> BoardValidator:
