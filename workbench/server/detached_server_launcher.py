@@ -27,8 +27,9 @@ class DetachedServerLauncher:
     def launch(self, port: int, working_dir: Path) -> int:
         """Start the server detached; return its pid."""
         command = self.build_command(port)
+        # No DETACHED_PROCESS: Windows ignores CREATE_NO_WINDOW with it, and every child console tool then flashes a window.
         flags = 0
-        for name in ("CREATE_NO_WINDOW", "DETACHED_PROCESS", "CREATE_NEW_PROCESS_GROUP"):
+        for name in ("CREATE_NO_WINDOW", "CREATE_NEW_PROCESS_GROUP"):
             flags |= getattr(subprocess, name, 0)
         self._log_path.parent.mkdir(parents=True, exist_ok=True)
         with self._log_path.open("ab") as log:

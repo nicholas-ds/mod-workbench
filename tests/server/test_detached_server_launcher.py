@@ -30,7 +30,7 @@ class FakeSpawn:
 
 def _expected_flags() -> int:
     flags = 0
-    for name in ("CREATE_NO_WINDOW", "DETACHED_PROCESS", "CREATE_NEW_PROCESS_GROUP"):
+    for name in ("CREATE_NO_WINDOW", "CREATE_NEW_PROCESS_GROUP"):
         flags |= getattr(subprocess, name, 0)
     return flags
 
