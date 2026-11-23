@@ -1,4 +1,4 @@
-"""Run one workbench subcommand: serve, init or check."""
+"""Run one workbench subcommand: serve (default), init, check, archive or server."""
 
 from __future__ import annotations
 
@@ -17,15 +17,27 @@ from workbench.mods.mod_init import ModInitializer
 from workbench.server.port_chooser import BadPortError, PortChooser
 from workbench.server.root_env import RootEnv
 from workbench.server.serve_settings import DEFAULT_PORT, DEFAULT_ROOTS, PORT_ENV, ROOTS_ENV
+from workbench.server.server_command_line import ServerCommandLine
+from workbench.server.server_control_factory import ServerControlFactory
 from workbench.server.workbench_server import WorkbenchServer
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 class WorkbenchCommands:
-    """Parse argv and run one subcommand: serve (default), init, check or archive."""
+    """Parse argv and run one subcommand: serve (default), init, check, archive or server."""
+
+    def __init__(self) -> None:
+        self._server_line = ServerCommandLine(ServerControlFactory().build(REPO_ROOT))
 
     def run(self, argv: list[str]) -> int:
         args = self._parse(argv)
-        commands = {"init": self._run_init, "check": self._run_check, "archive": self._run_archive}
+        commands = {
+            "init": self._run_init,
+            "check": self._run_check,
+            "archive": self._run_archive,
+            "server": self._run_server,
+        }
         return commands.get(args.command, self._run_serve)(args)
 
     def _run_archive(self, args: argparse.Namespace) -> int:
@@ -50,6 +62,7 @@ class WorkbenchCommands:
         archive = sub.add_parser("archive", help="zip old done boards losslessly")
         archive.add_argument("--apply", action="store_true", help="write changes")
         archive.add_argument("--days", type=int, default=30, help="min board age")
+        self._server_line.register(sub)
         parser.set_defaults(port=None)
         return parser.parse_args(argv)
 
@@ -62,6 +75,15 @@ class WorkbenchCommands:
             return 2
         WorkbenchServer().run(port)
         return 0
+
+    def _run_server(self, args: argparse.Namespace) -> int:
+        env_port = os.environ.get(PORT_ENV)
+        try:
+            port = PortChooser(DEFAULT_PORT).choose(None, env_port)
+        except BadPortError as error:
+            print(str(error))
+            return 2
+        return self._server_line.run(args, port)
 
     def _run_init(self, args: argparse.Namespace) -> int:
         repo = args.repo.resolve()

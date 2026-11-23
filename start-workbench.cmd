@@ -1,8 +1,6 @@
 @echo off
-rem Start the workbench. Open http://127.0.0.1:8760 in a browser.
+rem Start the detached workbench server. Open http://127.0.0.1:8760 in a browser.
 cd /d "%~dp0"
 if not defined WORKBENCH_ROOTS set WORKBENCH_ROOTS=%~dp0..
-echo The workbench runs at http://127.0.0.1:8760
-echo Keep this window open. Closing it stops the server.
-.venv\Scripts\python.exe -m workbench serve
-pause
+rem Run "python -m workbench serve" by hand for a foreground server.
+.venv\Scripts\python.exe -m workbench server start
