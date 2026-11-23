@@ -20,6 +20,7 @@ class DeliveryView:
     """One delivery record as plain text, ready for JSON."""
 
     notice_id: str
+    board: str
     owner: str
     state: str
     attempts: int
@@ -29,7 +30,7 @@ class DeliveryView:
 
     def as_json(self) -> dict[str, object]:
         """Return the view as a JSON-ready dict."""
-        return {"notice_id": self.notice_id, "owner": self.owner, "state": self.state,
+        return {"notice_id": self.notice_id, "board": self.board, "owner": self.owner, "state": self.state,
                 "attempts": self.attempts, "last_try": self.last_try,
                 "error": self.error, "label": self.label}
 
@@ -37,9 +38,9 @@ class DeliveryView:
 class DeliveryViewBuilder:
     """Build one DeliveryView from a stored DeliveryRecord."""
 
-    def build(self, record: DeliveryRecord) -> DeliveryView:
+    def build(self, record: DeliveryRecord, board: str) -> DeliveryView:
         """Map the record's enums to plain text and its plain-English label."""
-        return DeliveryView(notice_id=record.notice_id, owner=record.owner.text(),
+        return DeliveryView(notice_id=record.notice_id, board=board, owner=record.owner.text(),
                             state=record.state.value, attempts=record.attempts,
                             last_try=record.last_try, error=record.error,
                             label=_LABELS[record.state])

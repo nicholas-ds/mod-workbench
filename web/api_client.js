@@ -41,6 +41,14 @@ export class ApiClient {
     return this._send("POST", `${this._entry(mod, id)}/notes`, body);
   }
 
+  notices(mod) {
+    return this._send("GET", `${this._mod(mod)}/notices`);
+  }
+
+  retryNotice(mod, id) {
+    return this._send("POST", `${this._mod(mod)}/notices/${encodeURIComponent(id)}/retry`);
+  }
+
   wake() {
     return this._send("POST", "/api/wake");
   }

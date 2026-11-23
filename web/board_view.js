@@ -1,5 +1,6 @@
 // One board page: the whiteboard left and the questions panel right.
 
+import { DeliveryChips } from "./delivery_chips.js";
 import { DomBuilder } from "./dom_builder.js";
 import { ItemRenderer } from "./item_renderers.js";
 import { NotePinner } from "./note_pinner.js";
@@ -15,6 +16,7 @@ export class BoardView {
     this._whiteboard = new Whiteboard(new ItemRenderer(), (card, item) => this._pin(card, item));
     this._mod = "";
     this._id = "";
+    this._chips = null;
   }
 
   setOnBack(onBack) {
@@ -33,7 +35,7 @@ export class BoardView {
 
   // The questions panel calls this with the outcome of each successful change.
   panelChanged(outcome) {
-    if (outcome === "closed") this._onBack();
+    if (outcome === "closed") this._leave();
     else this.reopen();
   }
 
@@ -41,11 +43,21 @@ export class BoardView {
     try {
       const board = await this._api.board(mod, id);
       this._announceBoard(mod, id);
+      this._stopChips();
       this._getRoot().replaceChildren(this._page(mod, board));
       this._notice("");
     } catch (error) {
       this._notice(String(error));
     }
+  }
+
+  _stopChips() {
+    if (this._chips) this._chips.stop();
+  }
+
+  _leave() {
+    this._stopChips();
+    this._onBack();
   }
 
   _announceBoard(mod, id) {
@@ -55,8 +67,12 @@ export class BoardView {
   _page(mod, board) {
     const page = DomBuilder.el("section", "board");
     page.appendChild(this._header(board));
+    const chips = new DeliveryChips(this._api, mod, this._id);
+    this._chips = chips;
+    page.appendChild(chips.render());
     page.appendChild(this._split(mod, board));
     page.addEventListener("focusin", (event) => this._announceQuestion(event.target));
+    chips.start();
     return page;
   }
 
@@ -105,7 +121,7 @@ export class BoardView {
     const button = DomBuilder.el("button", "clay-button clay-quiet board-back",
       "Back to boards");
     button.type = "button";
-    button.addEventListener("click", () => this._onBack());
+    button.addEventListener("click", () => this._leave());
     return button;
   }
 

@@ -31,15 +31,23 @@ class NoticesRoutes:
     def notices(self, name: str) -> dict[str, object]:
         """List every delivery record of the mod, newest first."""
         cfg = self._registry.require(name)
-        records = self._inbox_of(cfg).all_records()
-        return {"notices": [self._views.build(record).as_json() for record in records]}
+        inbox = self._inbox_of(cfg)
+        views = [self._views.build(record, self._board_of(inbox, record))
+                 for record in inbox.all_records()]
+        return {"notices": [view.as_json() for view in views]}
 
     def retry(self, name: str, notice_id: str) -> dict[str, object]:
         """Redeliver one record and return its new view; 404 when unknown."""
         cfg = self._registry.require(name)
         record = self._record(cfg, notice_id)
         delivered = self._dispatcher_of(cfg).redeliver(record)
-        return {"notice": self._views.build(delivered).as_json()}
+        board = self._board_of(self._inbox_of(cfg), delivered)
+        return {"notice": self._views.build(delivered, board).as_json()}
+
+    @staticmethod
+    def _board_of(inbox: OwnerInbox, record: DeliveryRecord) -> str:
+        notice = inbox.notice_of(record)
+        return notice.board if notice else ""
 
     def _record(self, cfg: ModConfig, notice_id: str) -> DeliveryRecord:
         for record in self._inbox_of(cfg).all_records():
