@@ -17,6 +17,7 @@ from claude_agent_sdk import CanUseTool, ResultMessage
 
 from workbench.chat_job_book import ChatJobBook
 from workbench.chat_job_store import ChatJobStore
+from workbench.claude_job_recorder import ClaudeJobRecorder
 from workbench.claude_sdk_translator import ClaudeSdkTranslator
 from workbench.cli_pid_file import CliPidFile
 from workbench.session_id_store import SessionIdStore
@@ -37,6 +38,7 @@ class ClaudeSessionHolder:
         book: TurnBook,
         job_book: ChatJobBook,
         job_store: ChatJobStore,
+        job_recorder: ClaudeJobRecorder,
         pid_file: CliPidFile,
         on_result: Callable[[str, ResultMessage], Awaitable[None]],
         idle_seconds: float = 300.0,
@@ -47,6 +49,7 @@ class ClaudeSessionHolder:
         self._book = book
         self._job_book = job_book
         self._job_store = job_store
+        self._job_recorder = job_recorder
         self._pid_file = pid_file
         self._on_result = on_result
         self._idle_seconds = idle_seconds
@@ -117,6 +120,7 @@ class ClaudeSessionHolder:
     async def _read(self, name: str, client: ChatClient) -> None:
         try:
             async for message in client.receive_messages():
+                self._record_jobs(name, message)
                 self._offer_events(name, message)
                 if isinstance(message, ResultMessage):
                     await self._on_result(name, message)
@@ -127,6 +131,12 @@ class ClaudeSessionHolder:
             pass
         finally:
             await self.close(name)
+
+    def _record_jobs(self, name: str, message: object) -> None:
+        jobs = self._job_store.load(name)
+        updated = self._job_recorder.record(name, message, jobs)
+        if updated != jobs:
+            self._job_store.save(name, updated)
 
     def _offer_events(self, name: str, message: object) -> None:
         for event in self._translator.translate(message):

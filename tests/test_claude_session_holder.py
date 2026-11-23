@@ -12,6 +12,8 @@ from holder_fakes import (
     ResultRecorder,
     begin_turn,
     make_holder,
+    make_task_notification,
+    make_task_started,
     running_job,
     unused_permission,
     wait_for,
@@ -22,6 +24,7 @@ from runner_fakes import make_assistant, make_result
 import pytest
 
 from workbench.chat_event import ChatEvent, KIND_RESULT, KIND_TEXT
+from workbench.chat_job import STATE_FINISHED, STATE_RUNNING
 from workbench.chat_job_book import ChatJobBook
 
 
@@ -159,3 +162,24 @@ async def test_close_unless_busy_keeps_chat_with_running_job(tmp_path: Path) -> 
     await holder.close_unless_busy(NAME)
     assert holder.client_of(NAME) is None
     assert holder.reader_of(NAME) is None
+
+
+async def test_task_started_from_stream_keeps_client_open_past_idle(tmp_path: Path) -> None:
+    holder, _factory, _recorder, jobs, _book = make_holder(tmp_path)
+    client = await holder.open(NAME, unused_permission)
+    client.feed(make_task_started())
+    client.feed(make_result("s1"))
+    assert await wait_for(lambda: jobs.load(NAME) != ())
+    assert jobs.load(NAME)[0].state == STATE_RUNNING
+    assert not await wait_for(lambda: holder.client_of(NAME) is None, timeout=IDLE * 5)
+
+
+async def test_task_notification_from_stream_lets_the_idle_close_finish(tmp_path: Path) -> None:
+    holder, _factory, _recorder, jobs, _book = make_holder(tmp_path)
+    client = await holder.open(NAME, unused_permission)
+    client.feed(make_task_started())
+    client.feed(make_result("s1"))
+    assert await wait_for(lambda: jobs.load(NAME) != ())
+    client.feed(make_task_notification())
+    assert await wait_for(lambda: holder.client_of(NAME) is None)
+    assert jobs.load(NAME)[0].state == STATE_FINISHED

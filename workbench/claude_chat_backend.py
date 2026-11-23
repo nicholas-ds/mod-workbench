@@ -27,6 +27,7 @@ from workbench.chat_event import ChatEvent
 from workbench.chat_history_loader import ChatHistoryLoader
 from workbench.chat_job_book import ChatJobBook
 from workbench.chat_job_store import ChatJobStore
+from workbench.claude_job_recorder import ClaudeJobRecorder
 from workbench.claude_sdk_translator import ClaudeSdkTranslator
 from workbench.claude_session_holder import ClaudeSessionHolder
 from workbench.cli_pid_file import CliPidFile
@@ -83,10 +84,11 @@ class ClaudeChatBackend(ChatBackend):
         self._history_loader = history_loader
         self._slash_lister = slash_lister
         self._session_lister = session_lister
+        job_book = ChatJobBook()
         self._holder = ClaudeSessionHolder(
-            client_factory, store, translator, book, ChatJobBook(),
-            job_store or ChatJobStore(None), pid_file or CliPidFile(None),
-            self._finish_result, idle_seconds,
+            client_factory, store, translator, book, job_book,
+            job_store or ChatJobStore(None), ClaudeJobRecorder(job_book),
+            pid_file or CliPidFile(None), self._finish_result, idle_seconds,
         )
         self._turn_ends: dict[str, asyncio.Future[None]] = {}
         self._context_percent: dict[str, float] = {}

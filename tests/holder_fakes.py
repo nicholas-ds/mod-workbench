@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from claude_agent_sdk import ResultMessage
+from claude_agent_sdk import ResultMessage, TaskNotificationMessage, TaskStartedMessage
 
 from runner_fakes import make_assistant, make_result
 
@@ -15,6 +15,7 @@ from workbench.chat_event import ChatEvent, KIND_RESULT, KIND_TEXT
 from workbench.chat_job import KIND_CLAUDE_AGENT, STATE_RUNNING, ChatJob
 from workbench.chat_job_book import ChatJobBook
 from workbench.chat_job_store import ChatJobStore
+from workbench.claude_job_recorder import ClaudeJobRecorder
 from workbench.claude_sdk_translator import ClaudeSdkTranslator
 from workbench.claude_session_holder import ClaudeSessionHolder
 from workbench.cli_pid_file import CliPidFile
@@ -93,13 +94,15 @@ def make_holder(
     recorder = ResultRecorder()
     job_store = ChatJobStore(tmp_path / "jobs")
     book = TurnBook()
+    job_book = ChatJobBook()
     holder = ClaudeSessionHolder(
         client_factory=factory,
         session_store=SessionIdStore(None),
         translator=ClaudeSdkTranslator(),
         book=book,
-        job_book=ChatJobBook(),
+        job_book=job_book,
         job_store=job_store,
+        job_recorder=ClaudeJobRecorder(job_book),
         pid_file=CliPidFile(tmp_path / "pids"),
         on_result=recorder,
         idle_seconds=idle_seconds,
@@ -113,6 +116,23 @@ def begin_turn(book: TurnBook, name: str) -> TurnEventLog:
     pump = asyncio.create_task(asyncio.sleep(0))
     book.begin(name, log, pump)
     return log
+
+
+def make_task_started(task_id: str = "t1") -> TaskStartedMessage:
+    return TaskStartedMessage(
+        subtype="task_started", data={}, task_id=task_id,
+        description="subagent", uuid="u1", session_id="s1",
+    )
+
+
+def make_task_notification(
+    task_id: str = "t1", status: str = "completed", summary: str = "did the work"
+) -> TaskNotificationMessage:
+    return TaskNotificationMessage(
+        subtype="task_notification", data={}, task_id=task_id,
+        status=status, output_file="out.txt",
+        summary=summary, uuid="u1", session_id="s1",
+    )
 
 
 def running_job() -> tuple[ChatJob, ...]:
