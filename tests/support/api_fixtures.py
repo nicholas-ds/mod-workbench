@@ -4,7 +4,10 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from workbench.panes.pane_sender import PaneSender
 from workbench.server.workbench_parts import WorkbenchParts
+
+SILENT_PANE_SENDER = PaneSender(lambda args: 0)
 
 MOD_TOML = """\
 name = "CityMod"
@@ -115,6 +118,6 @@ def write_board(repo: Path, board_id: str, text: str) -> Path:
     return folder
 
 
-def make_client(root: Path) -> TestClient:
-    return TestClient(WorkbenchParts().factory.create_app([root]),
+def make_client(root: Path, pane_sender: PaneSender = SILENT_PANE_SENDER) -> TestClient:
+    return TestClient(WorkbenchParts(pane_sender).factory.create_app([root]),
                       base_url="http://127.0.0.1")

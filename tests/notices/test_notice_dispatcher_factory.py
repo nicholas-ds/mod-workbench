@@ -96,7 +96,7 @@ def test_no_owner_resolves_to_fallback_orchestrator(tmp_path: Path) -> None:
     assert record.owner == OwnerId(OwnerKind.PANE, ORCHESTRATOR_NAME)
     assert record.state is DeliveryState.UNKNOWN_OWNER
     assert len(sender.lines) == 1
-    assert sender.lines[0].startswith("[workbench] board=")
+    assert sender.lines[0].startswith("[workbench board] board=")
 
 
 def test_idle_pane_with_high_context_gets_handoff_prompt(tmp_path: Path) -> None:
@@ -121,5 +121,5 @@ def test_idle_pane_with_high_context_gets_handoff_prompt(tmp_path: Path) -> None
     assert sender.lines[0] == "/clear"
     assert sender.lines[1].startswith("Fresh session started by the workbench.")
     assert "the handoff" in sender.lines[1]
-    assert sender.lines[1].endswith("[workbench] board=b1 "
-                                    "event=question. Read boards/open/b1/board.md.")
+    assert "[workbench board] board=b1 event=question. Read boards/open/b1/board.md." \
+        in sender.lines[1]

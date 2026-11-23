@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from workbench.boards.board_types import Board
@@ -20,18 +21,17 @@ class OwnerResolution:
 class OwnerResolver:
     """Pick an owner for a board; never returns None and never raises."""
 
-    def __init__(self, store: BoardOwnerStore, fallback: OwnerId) -> None:
+    def __init__(self, store: BoardOwnerStore, fallback: OwnerId,
+                 is_reachable: Callable[[OwnerId], bool]) -> None:
         self._store = store
         self._fallback = fallback
+        self._is_reachable = is_reachable
 
     def resolve(self, board: Board) -> OwnerResolution:
-        """Try the store stamp, then the old raised_by value, then the fallback."""
-        stamped = self._store.read(board.folder)
-        if stamped is not None:
-            return OwnerResolution(stamped, True)
-        raised = self._parse_raised_by(board.raised_by)
-        if raised is not None:
-            return OwnerResolution(raised, True)
+        """Try the store stamp, then raised_by; an unreachable owner gets the fallback."""
+        named = self._store.read(board.folder) or self._parse_raised_by(board.raised_by)
+        if named is not None and self._is_reachable(named):
+            return OwnerResolution(named, True)
         return OwnerResolution(self._fallback, False)
 
     @staticmethod

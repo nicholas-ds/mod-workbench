@@ -11,6 +11,8 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 
+from workbench.panes.pane_sender import PaneSender
+
 from workbench.boards.alerts import NewBoardTracker, ToastNotifier, ToastSourceDetector
 from workbench.core.watch import FileChangeWatcher
 from workbench.server.alert_job import AlertJob
@@ -29,7 +31,7 @@ class WorkbenchServer:
 
     def _app(self) -> FastAPI:
         roots = RootEnv(ROOTS_ENV, DEFAULT_ROOTS).read()
-        parts = WorkbenchParts()
+        parts = WorkbenchParts(PaneSender())
         app = parts.factory.create_app(roots)
         extra_jobs: Sequence[BackgroundJob] = getattr(app.state, "background_jobs", [])
         jobs: list[BackgroundJob] = [AlertJob(self._alerter(parts, roots)), *extra_jobs]

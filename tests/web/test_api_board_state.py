@@ -56,8 +56,7 @@ def test_close_response_reports_notified(tmp_path: Path,
     status.mkdir()
     (status / "build.toml").write_text('wmux_surface = "surf-1"', encoding="utf-8")
     sender = RecordingSender()
-    monkeypatch.setattr("workbench.web.api.PaneSender", lambda: sender)
-    body = make_client(tmp_path).post(f"{BOARD_URL}/close").json()
+    body = make_client(tmp_path, sender).post(f"{BOARD_URL}/close").json()
     assert body["notified"] is True
     assert sender.lines != []
 
@@ -71,8 +70,7 @@ def test_send_response_reports_notified(tmp_path: Path,
     status.mkdir()
     (status / "build.toml").write_text('wmux_surface = "surf-1"', encoding="utf-8")
     sender = RecordingSender()
-    monkeypatch.setattr("workbench.web.api.PaneSender", lambda: sender)
-    body = make_client(tmp_path).post(f"{BOARD_URL}/send").json()
+    body = make_client(tmp_path, sender).post(f"{BOARD_URL}/send").json()
     assert body == {"id": "layout", "notified": True}
 
 
@@ -86,8 +84,7 @@ def test_note_response_reports_notified(tmp_path: Path,
     status.mkdir()
     (status / "build.toml").write_text('wmux_surface = "surf-1"', encoding="utf-8")
     sender = RecordingSender()
-    monkeypatch.setattr("workbench.web.api.PaneSender", lambda: sender)
-    body = make_client(tmp_path).post(
+    body = make_client(tmp_path, sender).post(
         f"{BOARD_URL}/notes",
         json={"item": "shot.png", "x": 0.5, "y": 0.25, "text": "look here"}).json()
     assert body["file"] == "layout-1.md"

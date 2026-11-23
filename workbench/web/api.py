@@ -111,13 +111,14 @@ class ApiFactory:
                  rework_writer: ReworkBriefWriter, note_writer: NoteWriter,
                  status_reader: StatusReader, worker_extractor: WorkerExtractor,
                  resolver: SafeItemResolver, kinds: ItemKindDetector,
-                 watcher: FileChangeWatcher) -> None:
+                 watcher: FileChangeWatcher, pane_sender: PaneSender) -> None:
         self._discovery, self._boards, self._answers = discovery, boards, answers
         self._lifecycle, self._sorter = lifecycle, sorter
         self._table_builder, self._rework_writer = table_builder, rework_writer
         self._note_writer, self._status_reader = note_writer, status_reader
         self._worker_extractor, self._resolver = worker_extractor, resolver
         self._kinds, self._watcher = kinds, watcher
+        self._pane_sender = pane_sender
 
     def create_app(self, roots: list[Path]) -> FastAPI:
         registry = ModRegistry(self._discovery, roots, self._boards, self._answers)
@@ -138,7 +139,7 @@ class ApiFactory:
         stack = ChatAssembly().build(
             directory, roots[0], _workbench_root() / "status", permissions, cards)
         sink = RunnerChatTurnSink(stack.resolver, directory)
-        factory = NoticeDispatcherFactory(pane_directory, PaneSender(), sink,
+        factory = NoticeDispatcherFactory(pane_directory, self._pane_sender, sink,
                                           stack.threads, stack.resolver,
                                           _utc_now, _new_id)
         app.state.background_jobs = [
@@ -156,7 +157,7 @@ class ApiFactory:
             ItemsRoutes(registry, self._resolver, self._kinds, HtmlItemStyler(_web_dir())),
             MessagesRoutes(registry, MessageWriter(),
                            pane_registry=PaneRegistry(_orchestrator_pane_file()),
-                           pane_sender=PaneSender(),
+                           pane_sender=self._pane_sender,
                            workbench_root=_workbench_root(),
                            pane_directory=pane_directory),
             NoticesRoutes(registry, lambda cfg: OwnerInbox.of_mod(cfg.repo),

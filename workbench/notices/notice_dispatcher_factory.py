@@ -79,12 +79,14 @@ class NoticeDispatcherFactory:
             self._is_known,
             lambda name: ChatThread.split_name(name)[0],
             lambda orchestrator: self._thread_registry.add(orchestrator).name)
+        recipients = RecipientResolver({OwnerKind.PANE: pane_recipient,
+                                        OwnerKind.CHAT: chat_recipient})
         return NoticeDispatcher(
             owner_resolver=OwnerResolver(
-                BoardOwnerStore(), fallback=OwnerId(OwnerKind.PANE, ORCHESTRATOR_NAME)),
+                BoardOwnerStore(), OwnerId(OwnerKind.PANE, ORCHESTRATOR_NAME),
+                lambda owner: recipients.resolve(owner).is_reachable(owner)),
             composer=NoticeComposer(), inbox=OwnerInbox.of_mod(cfg.repo),
-            recipient_resolver=RecipientResolver({OwnerKind.PANE: pane_recipient,
-                                                  OwnerKind.CHAT: chat_recipient}),
+            recipient_resolver=recipients,
             context_policy=ContextPolicy(), fresh_prompt=FreshStartPrompt(),
             handoff_text_of=LatestHandoffReader(cfg.repo / "notes").read,
             new_id=self._new_id, now=self._now)

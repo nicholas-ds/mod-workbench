@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from workbench.server.workbench_parts import WorkbenchParts
+from tests.support.api_fixtures import SILENT_PANE_SENDER
 
 WEB_DIR = Path(__file__).resolve().parents[2] / "web"
 FORBIDDEN = ("Naming", "Game design", "CityBuilder", "Starfield")
@@ -52,7 +53,7 @@ def test_keys_are_1_2_3_enter_s() -> None:
 
 
 def test_index_served_at_root(tmp_path: Path) -> None:
-    client = TestClient(WorkbenchParts().factory.create_app([tmp_path]),
+    client = TestClient(WorkbenchParts(SILENT_PANE_SENDER).factory.create_app([tmp_path]),
                         base_url="http://127.0.0.1")
     response = client.get("/")
     assert response.status_code == 200

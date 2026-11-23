@@ -18,13 +18,14 @@ from workbench.core.tables import TableBuilder
 from workbench.core.watch import FileChangeWatcher
 from workbench.mods.mod_registry import ModRegistry
 from workbench.mods.status import StatusReader, WorkerExtractor
+from workbench.panes.pane_sender import PaneSender
 from workbench.web.api import ApiFactory
 
 
 class WorkbenchParts:
     """Compose the default workbench parts."""
 
-    def __init__(self) -> None:
+    def __init__(self, pane_sender: PaneSender) -> None:
         self.repository = BoardRepository(FrontMatterParser(), BoardBuilder())
         self.answers = AnswerStore()
         self.factory = ApiFactory(
@@ -41,6 +42,7 @@ class WorkbenchParts:
             resolver=SafeItemResolver(),
             kinds=ItemKindDetector(),
             watcher=FileChangeWatcher(),
+            pane_sender=pane_sender,
         )
 
     def registry(self, roots: list[Path]) -> ModRegistry:
