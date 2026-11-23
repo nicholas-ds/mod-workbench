@@ -46,7 +46,7 @@ export class ConversationPanel {
   _conversationNodes(key) {
     const nodes = this._renderer.render(this._transcripts.items(key), key);
     const working = WorkingPill.trailing(this._transcripts.isRunning(key), key);
-    const agents = AgentsPill.trailing(this._agents.runningFor(key));
+    const agents = AgentsPill.trailing(this._agents.runningAgentsFor(key));
     return [...nodes, ...working, ...agents];
   }
 

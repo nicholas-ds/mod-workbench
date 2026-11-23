@@ -54,12 +54,16 @@ export class AgentActivity {
   // Running GLM workers of the orchestrator that owns the thread: the thread name maps to
   // a repo row, the row's status files carry the pane ids the workers report.
   runningFor(threadName) {
-    if (!threadName) return 0;
+    return this.runningAgentsFor(threadName).length;
+  }
+
+  runningAgentsFor(threadName) {
+    if (!threadName) return [];
     const surfaces = this._surfaces.get(orchestratorOf(threadName));
-    if (surfaces === undefined) return 0;
+    if (surfaces === undefined) return [];
     return this._agents.filter((agent) => agent.shown_state === RUNNING_STATE
       && agent.source !== CHAT_SOURCE && agent.registered
-      && surfaces.has(agent.orchestrator)).length;
+      && surfaces.has(agent.orchestrator));
   }
 
   subscribe(listener) {

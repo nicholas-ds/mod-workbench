@@ -56,7 +56,7 @@ export class ChatThreads {
   _fill(name, thread) {
     const messages = this._renderer.render(this._transcripts.items(name), name);
     const pill = WorkingPill.trailing(this._transcripts.isRunning(name), name);
-    const agents = AgentsPill.trailing(this._agents.runningFor(name));
+    const agents = AgentsPill.trailing(this._agents.runningAgentsFor(name));
     thread.replaceChildren(...messages, ...pill, ...agents);
   }
 

@@ -1,10 +1,17 @@
-// The agents pill: running GLM workers of the thread's orchestrator, blue tinted.
+// The agents pills: one line per running GLM worker of the thread's orchestrator, blue tinted.
 
 import { WorkingPill } from "./working_pill.js";
 
 export class AgentsPill {
-  // Nodes to add after the last message: the pill while workers run, nothing otherwise.
-  static trailing(count) {
-    return count > 0 ? [WorkingPill.build(`agents ${count}`, "working-in-thread agents-pill")] : [];
+  // Nodes to add after the last message: one pill per running worker, nothing otherwise.
+  static trailing(agents) {
+    return agents.map((agent) => WorkingPill.build(AgentsPill.label(agent), "working-in-thread agents-pill"));
+  }
+
+  // "title - last step - N calls": what the worker does now, not only that it runs.
+  static label(agent) {
+    const step = [agent.last_tool, agent.last_file].filter(Boolean).join(" ");
+    const parts = [agent.title, step, agent.progress, `${agent.tool_calls} calls`].filter(Boolean);
+    return parts.join(" · ");
   }
 }

@@ -18,7 +18,7 @@ export class DockPaneThread {
     try {
       const [data, working] = await Promise.all([this._api.messages(paneMod), this._isWorking(paneMod)]);
       const nodes = this._renderer.render(this._source.items(data.messages), paneMod);
-      const agents = AgentsPill.trailing(this._agents.runningFor(paneMod));
+      const agents = AgentsPill.trailing(this._agents.runningAgentsFor(paneMod));
       this._render([...nodes, ...WorkingPill.trailing(working, paneMod), ...agents]);
     } catch {
       // A failed poll keeps the current thread; only a failed send reports.
