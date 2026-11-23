@@ -107,10 +107,10 @@ The package list above copies `pyproject.toml`. The project itself does not inst
 ## Safety
 
 - The server is for one user. It listens on 127.0.0.1 only. Never bind it to 0.0.0.0.
-- The web chat runs Claude sessions with permission mode `auto` (`workbench/sdk_client_factory.py`). The session approves many tool calls without a prompt.
-- The app can type text into wmux terminal panes (`workbench/pane_sender.py`).
+- The web chat runs Claude sessions with permission mode `auto` (`workbench/claude/sdk_client_factory.py`). The session approves many tool calls without a prompt.
+- The app can type text into wmux terminal panes (`workbench/panes/pane_sender.py`).
 - `scripts/activity_hook.py` and `scripts/stop_gate.py` are Claude Code hooks. The stop gate can block an agent from stopping when it has no open board.
-- The GLM chat starts `opencode serve` on its first turn (`workbench/opencode_server_process.py`).
+- The GLM chat starts `opencode serve` on its first turn (`workbench/opencode/opencode_server_process.py`).
 
 ## Tests
 

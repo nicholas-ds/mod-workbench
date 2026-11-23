@@ -12,7 +12,7 @@ from pathlib import Path
 GLOB_PATTERNS = ("*/status/*.toml", "*/status/workspaces/*.toml")
 READ_LIMIT_BYTES = 64 * 1024
 FINISHED_LINE = re.compile(r'^\s*phase\s*=\s*"finished"')
-PERMANENT_TAG = "permanent"  # mirrors workbench/permanent_board.py; scripts/ cannot import workbench
+PERMANENT_TAG = "permanent"  # mirrors workbench/boards/permanent_board.py; scripts/ cannot import workbench
 BLOCK_REASON = (
     "You have no open board and no finished status. Permanent boards do not count. "
     "Raise a board for the next author decision with the workbench-board skill. "

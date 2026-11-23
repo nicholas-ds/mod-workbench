@@ -13,26 +13,26 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 
-from workbench.alerts import NewBoardTracker, ToastNotifier, ToastSourceDetector
-from workbench.archive_command import build_archive_command
-from workbench.answer_store import AnswerStore
-from workbench.api import ApiFactory
-from workbench.board_builder import BoardBuilder
-from workbench.board_check import BoardValidator
-from workbench.board_lifecycle import BoardLifecycle
-from workbench.board_repository import OPEN_STATE, BoardRepository
-from workbench.board_types import BoardEntry
-from workbench.config import ConfigError, ModConfig, ModConfigLoader, ModDiscovery
-from workbench.front_matter import FrontMatterParser
-from workbench.item_files import ItemKindDetector, SafeItemResolver
-from workbench.mod_init import ModInitializer
-from workbench.mod_registry import ModRegistry
-from workbench.note_writer import NoteWriter
-from workbench.queue import QueueSorter
-from workbench.rework import LogAppender, ReworkBriefWriter
-from workbench.status import StatusReader, WorkerExtractor
-from workbench.tables import TableBuilder
-from workbench.watch import FileChangeWatcher
+from workbench.boards.alerts import NewBoardTracker, ToastNotifier, ToastSourceDetector
+from workbench.archive.archive_command import build_archive_command
+from workbench.boards.answer_store import AnswerStore
+from workbench.web.api import ApiFactory
+from workbench.boards.board_builder import BoardBuilder
+from workbench.boards.board_check import BoardValidator
+from workbench.boards.board_lifecycle import BoardLifecycle
+from workbench.boards.board_repository import OPEN_STATE, BoardRepository
+from workbench.boards.board_types import BoardEntry
+from workbench.core.config import ConfigError, ModConfig, ModConfigLoader, ModDiscovery
+from workbench.boards.front_matter import FrontMatterParser
+from workbench.boards.item_files import ItemKindDetector, SafeItemResolver
+from workbench.mods.mod_init import ModInitializer
+from workbench.mods.mod_registry import ModRegistry
+from workbench.boards.note_writer import NoteWriter
+from workbench.boards.queue import QueueSorter
+from workbench.boards.rework import LogAppender, ReworkBriefWriter
+from workbench.mods.status import StatusReader, WorkerExtractor
+from workbench.core.tables import TableBuilder
+from workbench.core.watch import FileChangeWatcher
 
 ROOTS_ENV = "WORKBENCH_ROOTS"
 DEFAULT_ROOTS = str(Path(__file__).resolve().parents[2])

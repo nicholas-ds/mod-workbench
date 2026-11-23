@@ -12,11 +12,11 @@ import re
 import sys
 from pathlib import Path
 
-from workbench.export_grouper import ExportGrouper
-from workbench.opencode_endpoint_reader import OpencodeEndpointReader
-from workbench.sdk_dictionary_builder import SdkDictionaryBuilder
-from workbench.sdk_surface_reader import SdkSourceReader
-from workbench.surface_markdown_writer import SurfaceMarkdownWriter
+from workbench.surfaces.export_grouper import ExportGrouper
+from workbench.surfaces.opencode_endpoint_reader import OpencodeEndpointReader
+from workbench.surfaces.sdk_dictionary_builder import SdkDictionaryBuilder
+from workbench.surfaces.sdk_surface_reader import SdkSourceReader
+from workbench.surfaces.surface_markdown_writer import SurfaceMarkdownWriter
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "docs" / "sdk-chat"
 MODULE_FILES = ("types.py", "client.py", "query.py", "__init__.py", "_internal/sessions.py",
