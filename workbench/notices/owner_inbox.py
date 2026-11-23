@@ -36,6 +36,11 @@ class OwnerInbox:
         temp.write_text(json.dumps(payload), encoding="utf-8")
         os.replace(temp, path)
 
+    def notice_of(self, record: DeliveryRecord) -> Notice | None:
+        """Return the stored Notice of that record, None when missing."""
+        payload = self._load(self._path(record.owner, record.notice_id))
+        return self._notice(payload.get("notice"))
+
     def list_records(self, owner: OwnerId) -> list[DeliveryRecord]:
         """Return the owner's records, newest first."""
         return self._sorted_entries(f"{self._name(owner)}/*.json")
@@ -90,5 +95,17 @@ class OwnerInbox:
                                   state=DeliveryState(str(source["state"])),
                                   attempts=int(source["attempts"]),
                                   last_try=str(source["last_try"]), error=str(source["error"]))
+        except (ValueError, KeyError, TypeError):
+            return None
+
+    @staticmethod
+    def _notice(data: object) -> Notice | None:
+        source: dict[str, object] = data if isinstance(data, dict) else {}
+        try:
+            return Notice(id=str(source["id"]),
+                          owner=OwnerId.parse(str(source["owner"])),
+                          board=str(source["board"]), event=str(source["event"]),
+                          file_path=str(source["file_path"]), line=str(source["line"]),
+                          created=str(source["created"]))
         except (ValueError, KeyError, TypeError):
             return None

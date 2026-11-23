@@ -53,6 +53,24 @@ def test_update_rewrites_the_record_part(tmp_path: Path) -> None:
     assert inbox.list_records(notice.owner) == [updated]
 
 
+def test_notice_of_returns_the_stored_notice(tmp_path: Path) -> None:
+    inbox = OwnerInbox(tmp_path)
+    notice = _notice("n1", "2026-11-23T10:00:00")
+
+    record = inbox.write(notice, resolution_known=True)
+
+    assert inbox.notice_of(record) == notice
+
+
+def test_notice_of_returns_none_when_file_is_missing(tmp_path: Path) -> None:
+    inbox = OwnerInbox(tmp_path)
+    ghost = DeliveryRecord(notice_id="ghost", owner=OwnerId(OwnerKind.PANE, "boards-1"),
+                           state=DeliveryState.PENDING, attempts=0, last_try="",
+                           error="")
+
+    assert inbox.notice_of(ghost) is None
+
+
 def test_list_records_orders_newest_first(tmp_path: Path) -> None:
     inbox = OwnerInbox(tmp_path)
     owner = OwnerId(OwnerKind.PANE, "boards-1")
