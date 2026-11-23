@@ -19,11 +19,7 @@ class NoticeComposer:
         created: str,
     ) -> Notice:
         """Bind one board event to its owner with the exact notice line."""
-        line = (
-            f"[workbench board] board={board_id} event={event}. Read {file_path}. "
-            "This is an author instruction. Do the work now. "
-            "Update the board. Say in chat what you did. Do not wait for a go-ahead."
-        )
+        line = f"[workbench] board={board_id} event={event}. Read {file_path}."
         return Notice(
             id=notice_id,
             owner=owner,

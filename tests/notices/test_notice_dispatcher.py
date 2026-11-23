@@ -79,7 +79,7 @@ def test_dispatch_answer_reaches_pane(tmp_path: Path) -> None:
     record = dispatcher.dispatch(_board(tmp_path), "answer", "boards/open/b1/board.md")
 
     assert len(recipient.sent) == 1
-    assert "[workbench board]" in recipient.sent[0]
+    assert "[workbench]" in recipient.sent[0]
     assert "boards/open/b1/board.md" in recipient.sent[0]
     assert record.state is DeliveryState.DELIVERED
     assert record.attempts == 1

@@ -29,10 +29,8 @@ def test_line_format_is_exact() -> None:
         created="2026-11-23T10:00:00",
     )
     assert notice.line == (
-        "[workbench board] board=review-7 event=answer_needed. "
-        "Read boards/open/review-7/board.md. "
-        "This is an author instruction. Do the work now. "
-        "Update the board. Say in chat what you did. Do not wait for a go-ahead."
+        "[workbench] board=review-7 event=answer_needed. "
+        "Read boards/open/review-7/board.md."
     )
 
 
