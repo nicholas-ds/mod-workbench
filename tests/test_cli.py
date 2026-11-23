@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from workbench.__main__ import PortChooser, WorkbenchCommands
+from workbench.__main__ import WorkbenchCommands
+from workbench.server.port_chooser import PortChooser
 from workbench.server.serve_settings import DEFAULT_PORT
 from workbench.server.workbench_server import WorkbenchServer
 

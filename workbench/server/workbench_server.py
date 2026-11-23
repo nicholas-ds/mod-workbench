@@ -10,10 +10,10 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 
-from workbench.__main__ import RootEnv
 from workbench.boards.alerts import NewBoardTracker, ToastNotifier, ToastSourceDetector
 from workbench.core.watch import FileChangeWatcher
 from workbench.server.blocking_board_alerter import BlockingBoardAlerter
+from workbench.server.root_env import RootEnv
 from workbench.server.serve_settings import DEFAULT_ROOTS, HOST, ROOTS_ENV
 from workbench.server.workbench_parts import WorkbenchParts
 

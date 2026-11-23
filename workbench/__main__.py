@@ -14,45 +14,10 @@ from workbench.boards.board_repository import BoardRepository
 from workbench.boards.front_matter import FrontMatterParser
 from workbench.core.config import ConfigError, ModConfig, ModConfigLoader
 from workbench.mods.mod_init import ModInitializer
+from workbench.server.port_chooser import BadPortError, PortChooser
+from workbench.server.root_env import RootEnv
 from workbench.server.serve_settings import DEFAULT_PORT, DEFAULT_ROOTS, PORT_ENV, ROOTS_ENV
-
-
-class BadPortError(ValueError):
-    """The requested port is not an integer from 1 to 65535."""
-
-
-class PortChooser:
-    """Pick the serve port from the flag, then the env var, then the default."""
-
-    def __init__(self, default: int) -> None:
-        self._default = default
-
-    def choose(self, argv_port: str | None, env_port: str | None) -> int:
-        requested = argv_port if argv_port is not None else env_port
-        if requested is None:
-            return self._default
-        return self._validated(requested)
-
-    def _validated(self, raw: str) -> int:
-        try:
-            port = int(raw)
-        except ValueError:
-            raise BadPortError(f"port must be an integer, got {raw!r}") from None
-        if not 1 <= port <= 65535:
-            raise BadPortError(f"port must be between 1 and 65535, got {port}")
-        return port
-
-
-class RootEnv:
-    """Read the mod root folders from one environment variable."""
-
-    def __init__(self, name: str, default: str) -> None:
-        self._name = name
-        self._default = default
-
-    def read(self) -> list[Path]:
-        raw = os.environ.get(self._name, self._default)
-        return [Path(part) for part in raw.split(os.pathsep) if part.strip()]
+from workbench.server.workbench_server import WorkbenchServer
 
 
 class WorkbenchCommands:
@@ -89,8 +54,6 @@ class WorkbenchCommands:
         return parser.parse_args(argv)
 
     def _run_serve(self, args: argparse.Namespace) -> int:
-        from workbench.server.workbench_server import WorkbenchServer
-
         env_port = os.environ.get(PORT_ENV)
         try:
             port = PortChooser(DEFAULT_PORT).choose(args.port, env_port)
