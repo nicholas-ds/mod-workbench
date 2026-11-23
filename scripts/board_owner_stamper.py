@@ -33,10 +33,23 @@ class BoardOwnerStamper:
         name = self._name_finder.name_of(surface_id)
         if name is None:
             return False
+        return self._write_owner(board_folder, f"pane:{name}")
+
+    def stamp_chat(self, edited_file: str, chat_name: str) -> bool:
+        """Write the owner stamp as chat:<name>; True only when written."""
+        try:
+            board_folder = self._board_folder(edited_file)
+            if board_folder is None:
+                return False
+            return self._write_owner(board_folder, f"chat:{chat_name}")
+        except OSError:
+            return False
+
+    def _write_owner(self, board_folder: Path, owner: str) -> bool:
         target = board_folder / OWNER_FILE
         if target.exists():
             return False
-        payload = {"owner": f"pane:{name}"}  # same format as BoardOwnerStore
+        payload = {"owner": owner}  # same format as BoardOwnerStore
         temp = target.with_suffix(".tmp")
         temp.write_text(json.dumps(payload), encoding="utf-8")
         os.replace(temp, target)

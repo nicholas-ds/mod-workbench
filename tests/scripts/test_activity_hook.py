@@ -196,3 +196,17 @@ def test_without_prompt_started_the_phase_line_stays(tmp_path: Path) -> None:
     root = make_phase_root(tmp_path)
     ActivityRecorder().update(root, SURFACE, "working", NOW)
     assert 'phase = "finished"' in read(root, "a.toml")
+
+
+def test_chat_session_stamps_the_board_it_edits(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    stamped: list[tuple[str, str]] = []
+    monkeypatch.setattr(activity_hook.BoardOwnerStamper, "stamp_chat",
+                        lambda self, edited, name: stamped.append((edited, name)))
+    payload = {"hook_event_name": "PreToolUse", "tool_name": "Write",
+               "tool_input": {"file_path": "x/boards/open/b1/board.md"}}
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(payload)))
+    monkeypatch.setenv(activity_hook.CHAT_SESSION_ENV, "1")
+    monkeypatch.setenv(activity_hook.CHAT_OWNER_ENV, "review")
+    assert activity_hook.main() == 0
+    assert stamped == [("x/boards/open/b1/board.md", "review")]

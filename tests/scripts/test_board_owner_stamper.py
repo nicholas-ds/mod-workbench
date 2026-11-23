@@ -68,3 +68,11 @@ def test_stamp_returns_false_instead_of_raising_on_a_missing_folder(
     root = make_root(tmp_path)
     board_md = str(root / "repo" / "boards" / "open" / "gone" / "board.md")
     assert make_stamper(root).stamp(board_md, "s1") is False
+
+
+def test_stamp_chat_writes_a_chat_owner(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    board_md = str(root / "repo" / "boards" / "open" / "b1" / "board.md")
+    assert make_stamper(root).stamp_chat(board_md, "review~t1") is True
+    owner = root / "repo" / "boards" / "open" / "b1" / "owner.json"
+    assert json.loads(owner.read_text(encoding="utf-8")) == {"owner": "chat:review~t1"}

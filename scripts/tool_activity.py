@@ -18,6 +18,7 @@ class ToolActivity:
     state: str
     last_tool: str
     edited_file: str = ""
+    edited_path: str = ""
 
 
 class ToolEventClassifier:
@@ -37,9 +38,10 @@ class ToolEventClassifier:
         detail = self._first_detail(tool_input)
         last_tool = f"{tool_name} {detail}".strip()
         state = "worker" if self._is_worker(tool_name, tool_input) else "working"
-        edited_file = self._edited_file_name(tool_name, tool_input)
+        edited_path = self._edited_path(tool_name, tool_input)
         return ToolActivity(state=state, last_tool=self._toml_safe(last_tool),
-                            edited_file=edited_file)
+                            edited_file=self._toml_safe(self._base_name(edited_path)),
+                            edited_path=edited_path)
 
     def _classify_notification(self, payload: dict) -> ToolActivity:
         message = payload.get("message", "")
@@ -52,13 +54,13 @@ class ToolEventClassifier:
                 return self._one_line(value)[:TOOL_DETAIL_LIMIT]
         return ""
 
-    def _edited_file_name(self, tool_name: str, tool_input: dict) -> str:
+    def _edited_path(self, tool_name: str, tool_input: dict) -> str:
         if tool_name not in EDIT_TOOLS:
             return ""
         for key in EDIT_PATH_KEYS:
             value = tool_input.get(key)
             if isinstance(value, str) and value:
-                return self._toml_safe(self._base_name(value))
+                return value
         return ""
 
     def _base_name(self, path: str) -> str:

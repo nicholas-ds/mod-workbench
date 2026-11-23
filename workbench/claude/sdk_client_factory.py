@@ -9,6 +9,7 @@ from workbench.chat.chat_session_note import ChatSessionNote
 
 CHAT_PERMISSION_MODE = "auto"
 CHAT_SESSION_ENV = "WORKBENCH_CHAT_SESSION"
+CHAT_OWNER_ENV = "WORKBENCH_CHAT_OWNER"
 ASK_TOOL = "AskUserQuestion"
 CHAT_MODEL = "sonnet"
 
@@ -38,7 +39,7 @@ class SdkClientFactory:
             cwd=self._directory.folder_of(name),
             setting_sources=["user", "project"],
             permission_mode=CHAT_PERMISSION_MODE,
-            env={CHAT_SESSION_ENV: "1"},
+            env={CHAT_SESSION_ENV: "1", CHAT_OWNER_ENV: name},
             resume=resume or None,
             can_use_tool=can_use_tool,
             system_prompt={

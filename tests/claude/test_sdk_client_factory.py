@@ -53,7 +53,8 @@ def test_options_accept_edits_inside_the_working_directory() -> None:
 
 def test_chat_sessions_are_marked_so_terminal_hooks_skip_them() -> None:
     client = make_factory().create("mod-a", "")
-    assert client.options.env == {"WORKBENCH_CHAT_SESSION": "1"}
+    assert client.options.env == {"WORKBENCH_CHAT_SESSION": "1",
+                                  "WORKBENCH_CHAT_OWNER": "mod-a"}
 
 
 def test_can_use_tool_is_passed_to_the_options() -> None:

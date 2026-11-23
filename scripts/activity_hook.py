@@ -22,6 +22,7 @@ TOOL_EVENTS = ("PreToolUse", "Notification")
 IDLE_CLEARED_KEYS = ("task", "last_tool_at", "last_tool", "last_file", "tool_calls")
 GLOB_PATTERNS = ("*/status/*.toml", "*/status/workspaces/*.toml")
 CHAT_SESSION_ENV = "WORKBENCH_CHAT_SESSION"
+CHAT_OWNER_ENV = "WORKBENCH_CHAT_OWNER"
 ERROR_LOG = Path(__file__).resolve().parents[1] / "status" / "hook-errors.log"
 
 
@@ -133,9 +134,25 @@ def _follow_clear(payload: dict[str, object], event: str | None,
             surface_key, payload.get("session_id", ""))
 
 
+def _stamp_chat_boards() -> None:
+    """A chat session stamps the boards it edits as chat:<name> and does nothing else."""
+    chat_name = os.environ.get(CHAT_OWNER_ENV)
+    try:
+        payload = json.loads(sys.stdin.read())
+        if not chat_name or payload.get("hook_event_name") not in TOOL_EVENTS:
+            return
+        activity = ToolEventClassifier().classify(payload)
+        if activity is not None and activity.edited_path:
+            stamper = BoardOwnerStamper(PaneNameFinder(Path(__file__).resolve().parents[2], GLOB_PATTERNS))
+            stamper.stamp_chat(activity.edited_path, chat_name)
+    except Exception:
+        _log_error()
+
+
 def main() -> int:
     """One entry point for every session: it is the hook all sessions already load."""
     if os.environ.get(CHAT_SESSION_ENV) == "1":
+        _stamp_chat_boards()
         return 0
     try:
         payload = json.loads(sys.stdin.read())
@@ -154,9 +171,9 @@ def main() -> int:
                 ActivityRecorder().update(
                     root, surface_id, activity.state, now,
                     activity.last_tool, activity.edited_file)
-                if activity.edited_file and surface_id:
+                if activity.edited_path and surface_id:
                     stamper = BoardOwnerStamper(PaneNameFinder(root, GLOB_PATTERNS))
-                    stamper.stamp(activity.edited_file, surface_id)
+                    stamper.stamp(activity.edited_path, surface_id)
         if surface_id and event == "UserPromptSubmit":
             handle_prompt(payload, surface_id, root)
         if surface_id and event == "Stop":
