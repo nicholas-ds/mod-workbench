@@ -9,6 +9,8 @@ import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
+from board_owner_stamper import BoardOwnerStamper
+from pane_name_finder import PaneNameFinder
 from prompt_recorder import handle_prompt
 from session_follower import SessionFollower
 from stop_gate import handle_stop
@@ -152,6 +154,9 @@ def main() -> int:
                 ActivityRecorder().update(
                     root, surface_id, activity.state, now,
                     activity.last_tool, activity.edited_file)
+                if activity.edited_file and surface_id:
+                    stamper = BoardOwnerStamper(PaneNameFinder(root, GLOB_PATTERNS))
+                    stamper.stamp(activity.edited_file, surface_id)
         if surface_id and event == "UserPromptSubmit":
             handle_prompt(payload, surface_id, root)
         if surface_id and event == "Stop":
