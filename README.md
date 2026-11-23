@@ -69,6 +69,10 @@ The overview page lists open boards, agents with their state, and the status of 
 
 ![The overview page](docs/img/orchestration.jpg)
 
+The message popup sits at the right edge of every page. Here it floats over a status board, with the conversation open.
+
+![The message popup with a conversation open](docs/img/chat-popup-board.png)
+
 ## Requirements
 
 - Windows. The app uses Windows toast notifications and Windows scripts.
