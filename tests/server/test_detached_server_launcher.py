@@ -36,10 +36,10 @@ def _expected_flags() -> int:
 
 
 def test_build_command_uses_module_and_port() -> None:
-    launcher = DetachedServerLauncher(Path("pythonw.exe"), Path("serve.log"))
+    launcher = DetachedServerLauncher(Path("python.exe"), Path("serve.log"))
 
     assert launcher.build_command(8760) == [
-        "pythonw.exe",
+        "python.exe",
         "-m",
         "workbench",
         "serve",
@@ -51,12 +51,12 @@ def test_build_command_uses_module_and_port() -> None:
 def test_launch_spawns_detached_with_log_and_returns_pid(tmp_path: Path) -> None:
     spawn = FakeSpawn(pid=4321)
     log_path = tmp_path / "logs" / "serve.log"
-    launcher = DetachedServerLauncher(Path("pythonw.exe"), log_path, spawn=spawn)
+    launcher = DetachedServerLauncher(Path("python.exe"), log_path, spawn=spawn)
 
     pid = launcher.launch(8760, working_dir=tmp_path)
 
     assert pid == 4321
-    assert spawn.args == (["pythonw.exe", "-m", "workbench", "serve", "--port", "8760"],)
+    assert spawn.args == (["python.exe", "-m", "workbench", "serve", "--port", "8760"],)
     assert spawn.kwargs["cwd"] == tmp_path
     assert spawn.kwargs["stdin"] == subprocess.DEVNULL
     assert spawn.kwargs["stderr"] == subprocess.STDOUT
@@ -68,7 +68,7 @@ def test_launch_spawns_detached_with_log_and_returns_pid(tmp_path: Path) -> None
 def test_launch_appends_to_existing_log(tmp_path: Path) -> None:
     log_path = tmp_path / "serve.log"
     log_path.write_bytes(b"old\n")
-    launcher = DetachedServerLauncher(Path("pythonw.exe"), log_path, spawn=FakeSpawn())
+    launcher = DetachedServerLauncher(Path("python.exe"), log_path, spawn=FakeSpawn())
 
     launcher.launch(8760, working_dir=tmp_path)
 

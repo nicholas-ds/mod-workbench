@@ -42,7 +42,7 @@ class ServerControlFactory:
         """Return the command wired to the repo's status folder and venv."""
         pid_file = ServerPidFile(repo_root / "status" / "workbench_server.json")
         log_path = repo_root / "status" / "workbench_server.log"
-        python_exe = repo_root / ".venv" / "Scripts" / "pythonw.exe"
+        python_exe = repo_root / ".venv" / "Scripts" / "python.exe"
         return ServerControlCommand(
             prober=ServerProber(pid_file, PidAliveCheck(), PortAnswerCheck()),
             launcher=DetachedServerLauncher(python_exe, log_path),
