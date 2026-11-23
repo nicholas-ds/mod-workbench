@@ -143,6 +143,16 @@ class StubHistoryLoader:
         return self.events
 
 
+class FakeServerProcess:
+    """Stands in for the opencode serve child process; records stop calls."""
+
+    def __init__(self) -> None:
+        self.stop_calls = 0
+
+    def stop(self) -> None:
+        self.stop_calls += 1
+
+
 def make_backend(
     polls: list[Poll],
     store: SessionIdStore,
@@ -171,6 +181,7 @@ def make_backend(
         FakeDirectory(),
         follower,
         StubHistoryLoader(events),
+        FakeServerProcess(),
     )
     return backend, factory
 

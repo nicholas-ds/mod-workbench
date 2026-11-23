@@ -132,4 +132,5 @@ class ChatAssembly:
             directory,
             follower,
             opencode_history,
+            opencode_server,
         )

@@ -108,6 +108,10 @@ class ChatBackend(ABC):
         await self._forget(name)
         self._book.drop_queue(name)
 
+    async def close(self) -> None:
+        """Release backend-owned child processes; the base backend owns none."""
+        return None
+
     def _start_turn(self, name: str, prompt: str, announced: bool) -> TurnEventLog:
         log = TurnEventLog()
         if announced:

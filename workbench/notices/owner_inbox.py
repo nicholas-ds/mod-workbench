@@ -45,6 +45,10 @@ class OwnerInbox:
         """Return the owner's records, newest first."""
         return self._sorted_entries(f"{self._name(owner)}/*.json")
 
+    def all_records(self) -> list[DeliveryRecord]:
+        """Return every record across all owners, newest first."""
+        return self._sorted_entries("*/*.json")
+
     def pending(self) -> list[DeliveryRecord]:
         """Return every PENDING or FAILED record across owners, newest first."""
         records = self._sorted_entries("*/*.json")

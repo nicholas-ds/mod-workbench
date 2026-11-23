@@ -17,6 +17,7 @@ from workbench.chat.chat_backend import BackendTraits, ChatBackend, SessionView
 from workbench.chat.chat_event import ChatEvent
 from workbench.opencode.opencode_history import OpencodeHistoryLoader
 from workbench.opencode.opencode_http_client import OpencodeHttpClient
+from workbench.opencode.opencode_server_process import OpencodeServerProcess
 from workbench.opencode.opencode_turn_follower import OpencodeTurnFollower
 from workbench.chat.orchestrator_directory import OrchestratorDirectory
 from workbench.chat.pending_permission_store import PendingPermissionStore
@@ -48,6 +49,7 @@ class OpencodeChatBackend(ChatBackend):
         directory: OrchestratorDirectory,
         follower: OpencodeTurnFollower,
         history_loader: OpencodeHistoryLoader,
+        server_process: OpencodeServerProcess,
         handoff_settle_seconds: float = HANDOFF_SETTLE_SECONDS,
         handoff_poll_seconds: float = HANDOFF_POLL_SECONDS,
     ) -> None:
@@ -59,6 +61,7 @@ class OpencodeChatBackend(ChatBackend):
         self._directory = directory
         self._follower = follower
         self._history_loader = history_loader
+        self._server_process = server_process
         self._clients: dict[str, OpencodeHttpClient] = {}
 
     @property
@@ -73,6 +76,10 @@ class OpencodeChatBackend(ChatBackend):
             supports_slash_commands=True,
             supports_resume=False,
         )
+
+    async def close(self) -> None:
+        """Stop the shared opencode serve child process."""
+        self._server_process.stop()
 
     def context_percent(self, name: str) -> float | None:
         """OpenCode exposes no context percent; always None."""

@@ -97,3 +97,15 @@ def test_pending_lists_failed_and_skips_delivered(tmp_path: Path) -> None:
     inbox.update(failed)
 
     assert inbox.pending() == [failed]
+
+
+def test_all_records_spans_owners_newest_first(tmp_path: Path) -> None:
+    inbox = OwnerInbox(tmp_path)
+    inbox.write(_notice("n1", "2026-11-23T09:00:00"), True)
+    other = Notice(id="n2", owner=OwnerId(OwnerKind.CHAT, "review"), board="b2",
+                   event="answer", file_path="p", line="l", created="2026-11-23T10:00:00")
+    inbox.write(other, True)
+
+    records = inbox.all_records()
+
+    assert [record.notice_id for record in records] == ["n2", "n1"]

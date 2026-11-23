@@ -106,6 +106,9 @@ class ClaudeChatBackend(ChatBackend):
             supports_resume=True,
         )
 
+    async def close(self) -> None:
+        await self._holder.close_all()
+
     def context_percent(self, name: str) -> float | None:
         """Return the context window percent measured after the last finished turn."""
         return self._context_percent.get(name)

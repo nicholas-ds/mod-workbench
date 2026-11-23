@@ -7,6 +7,7 @@ state in the old one.
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 
@@ -47,6 +48,17 @@ class ChatBackendResolver:
         """Retire the chat on every backend; old ones may hold state."""
         for backend in self._backends.values():
             await backend.retire(name)
+
+    async def close_all(self) -> None:
+        """Close every backend's children; one failing close must not stop the next."""
+        for key, backend in self._backends.items():
+            try:
+                await backend.close()
+            except Exception as exc:
+                print(
+                    f"[Workbench] backend close failed: {key}: {exc}",
+                    file=sys.stderr,
+                )
 
     def is_running(self, name: str) -> bool:
         return any(backend.is_running(name) for backend in self._backends.values())
