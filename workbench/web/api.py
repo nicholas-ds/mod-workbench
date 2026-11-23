@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 import uuid
 from datetime import UTC, datetime
@@ -18,6 +19,11 @@ from workbench.boards.board_repository import BoardRepository
 from workbench.core.config import ModDiscovery
 from workbench.agents.claude_translator import ClaudeEventTranslator
 from workbench.web.chat_assembly import ChatAssembly
+from workbench.notices.delivery_view import DeliveryViewBuilder
+from workbench.notices.owner_inbox import OwnerInbox
+from workbench.server.all_mods_retry_job import AllModsRetryJob
+from workbench.server.chat_shutdown_job import ChatShutdownJob
+from workbench.web.routes_notices import NoticesRoutes
 from workbench.chat.chat_command import SlashCommandParser
 from workbench.panes.chat_turn_sink import RunnerChatTurnSink
 from workbench.chat.chat_upload_saver import ChatUploadSaver
@@ -116,14 +122,15 @@ class ApiFactory:
     def create_app(self, roots: list[Path]) -> FastAPI:
         registry = ModRegistry(self._discovery, roots, self._boards, self._answers)
         app = FastAPI(title="mod-workbench")
-        for router in self._routers(registry, roots):
+        for router in self._routers(app, registry, roots):
             app.include_router(router)
         app.add_middleware(NoCacheHeaders)
         app.add_middleware(LocalRequestGuard)
         self._mount_web(app)
         return app
 
-    def _routers(self, registry: ModRegistry, roots: list[Path]) -> list[APIRouter]:
+    def _routers(self, app: FastAPI, registry: ModRegistry,
+                 roots: list[Path]) -> list[APIRouter]:
         directory = OrchestratorDirectory(registry, roots[0])
         pane_directory = PaneDirectory(registry, _workbench_root())
         permissions = PendingPermissionStore()
@@ -134,6 +141,10 @@ class ApiFactory:
         factory = NoticeDispatcherFactory(pane_directory, PaneSender(), sink,
                                           stack.threads, stack.resolver,
                                           _utc_now, _new_id)
+        app.state.background_jobs = [
+            ChatShutdownJob(stack.resolver),
+            AllModsRetryJob(registry, factory, asyncio.sleep),
+        ]
         scanner = HandoffScanner(registry, "StarfieldModResearch", OpenRequestReader(),
                                  UnpickedFileFinder(), BoardTextReader(), TrackingTextReader())
         groups = [
@@ -148,6 +159,8 @@ class ApiFactory:
                            pane_sender=PaneSender(),
                            workbench_root=_workbench_root(),
                            pane_directory=pane_directory),
+            NoticesRoutes(registry, lambda cfg: OwnerInbox.of_mod(cfg.repo),
+                          factory.build, DeliveryViewBuilder()),
             DetailRoutes(registry, ModDetailReader()),
             OverviewRoutes(registry, TaskOverviewReader(), roots[0] / "tracking.md"),
             EventsRoutes(self._watcher, registry),

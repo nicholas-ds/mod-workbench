@@ -18,6 +18,11 @@ class OwnerInbox:
     def __init__(self, root: Path) -> None:
         self._root = root
 
+    @classmethod
+    def of_mod(cls, repo: Path) -> OwnerInbox:
+        """The inbox of the mod whose repository is `repo`."""
+        return cls(repo / "status" / "inbox")
+
     def write(self, notice: Notice, resolution_known: bool) -> DeliveryRecord:
         """Store the notice with a fresh record and return that record."""
         state = DeliveryState.PENDING if resolution_known else DeliveryState.UNKNOWN_OWNER
