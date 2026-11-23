@@ -100,7 +100,7 @@ class ReplyCapturer:
     def _record_unprompted(self, messages: Path, reply_text: str, now: datetime) -> None:
         """Keep a chat reply that no author message asked for, so the UI thread shows it."""
         replies = messages / "replies"
-        if self._is_latest_reply(replies, reply_text):
+        if self._is_latest_reply(replies, reply_text) or self._reply_follows_author(messages):
             return
         message_id = now.strftime("%Y%m%dT%H%M%S+0000") + "-agent"
         done = messages / "done"
@@ -115,6 +115,11 @@ class ReplyCapturer:
     def _is_latest_reply(self, replies: Path, reply_text: str) -> bool:
         files = sorted(replies.glob("*.md"), key=lambda path: path.stat().st_mtime) if replies.is_dir() else []
         return bool(files) and files[-1].read_text(encoding="utf-8").strip() == reply_text.strip()
+
+    def _reply_follows_author(self, messages: Path) -> bool:
+        author_times = [path.stat().st_mtime for path in (messages / "done").glob("*.md") if not path.stem.endswith("-agent")]
+        reply_times = [path.stat().st_mtime for path in (messages / "replies").glob("*.md") if not path.stem.endswith("-agent")]
+        return bool(author_times) and bool(reply_times) and max(reply_times) > max(author_times)
 
     def _answer(self, messages: Path, message: Path, reply_text: str) -> None:
         reply = messages / "replies" / f"{message.stem}.md"

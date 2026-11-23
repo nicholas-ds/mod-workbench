@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -139,3 +140,18 @@ def test_capturer_keeps_an_unprompted_reply_once(tmp_path: Path) -> None:
     replies = list((messages / "replies").glob("*-agent.md"))
     assert [path.read_text(encoding="utf-8") for path in replies] == ["update\n"]
     assert len(list((messages / "done").glob("*-agent.md"))) == 1
+
+
+def test_capturer_skips_unprompted_text_when_a_reply_follows_the_last_author_message(tmp_path: Path) -> None:
+    workspace = make_repo(tmp_path)
+    messages = workspace.repo / "messages"
+    (messages / "done").mkdir(parents=True)
+    (messages / "replies").mkdir()
+    author_message = messages / "done" / "20261123T100000+0000.md"
+    author_message.write_text("question", encoding="utf-8")
+    reply = messages / "replies" / "20261123T100000+0000.md"
+    reply.write_text("written by the agent\n", encoding="utf-8")
+    os.utime(author_message, (1000, 1000))
+    os.utime(reply, (2000, 2000))
+    ReplyCapturer().capture(workspace.repo, "different chat wording")
+    assert list((messages / "replies").glob("*-agent.md")) == []
