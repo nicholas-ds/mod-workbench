@@ -99,7 +99,7 @@ def test_new_keys_go_before_the_first_table(tmp_path: Path) -> None:
 
 
 def _raise_update(self: object, root: Path, surface_id: str, state: str, now: str,
-                  prompt_started: bool = False) -> None:
+                  prompt_started: bool = False, notice_tag: str | None = None) -> None:
     raise RuntimeError("hook blew up")
 
 
@@ -210,3 +210,36 @@ def test_chat_session_stamps_the_board_it_edits(
     monkeypatch.setenv(activity_hook.CHAT_OWNER_ENV, "review")
     assert activity_hook.main() == 0
     assert stamped == [("x/boards/open/b1/board.md", "review")]
+
+
+def test_prompt_with_notice_writes_prompt_at_and_notice(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    ActivityRecorder().update(root, SURFACE, "working", NOW, prompt_started=True,
+                              notice_tag="board-x closed")
+    text = read(root, "a.toml")
+    assert f'prompt_at = "{NOW}"' in text
+    assert 'prompt_notice = "board-x closed"' in text
+
+
+def test_normal_prompt_updates_prompt_at_and_removes_notice(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    recorder = ActivityRecorder()
+    recorder.update(root, SURFACE, "working", NOW, prompt_started=True,
+                    notice_tag="board-x closed")
+    recorder.update(root, SURFACE, "working", "2026-11-08T13:00:00",
+                    prompt_started=True)
+    text = read(root, "a.toml")
+    assert f'prompt_at = "{NOW}"' not in text
+    assert 'prompt_at = "2026-11-08T13:00:00"' in text
+    assert "prompt_notice" not in text
+
+
+def test_idle_keeps_prompt_at_and_notice(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    recorder = ActivityRecorder()
+    recorder.update(root, SURFACE, "working", NOW, prompt_started=True,
+                    notice_tag="board-x closed")
+    recorder.update(root, SURFACE, "idle", "2026-11-08T13:00:00")
+    text = read(root, "a.toml")
+    assert f'prompt_at = "{NOW}"' in text
+    assert 'prompt_notice = "board-x closed"' in text

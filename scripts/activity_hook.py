@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from board_owner_stamper import BoardOwnerStamper
+from notice_prompt import NoticePromptParser
 from pane_name_finder import PaneNameFinder
 from prompt_recorder import handle_prompt
 from session_follower import SessionFollower
@@ -31,11 +32,12 @@ class ActivityRecorder:
 
     def update(self, root: Path, surface_id: str, state: str, now: str,
                last_tool: str | None = None, edited_file: str = "",
-               prompt_started: bool = False) -> None:
+               prompt_started: bool = False,
+               notice_tag: str | None = None) -> None:
         for path in self._candidate_paths(root):
             try:
                 self._update_file(path, surface_id, state, now, last_tool,
-                                  edited_file, prompt_started)
+                                  edited_file, prompt_started, notice_tag)
             except OSError:
                 continue
 
@@ -45,13 +47,13 @@ class ActivityRecorder:
 
     def _update_file(self, path: Path, surface_id: str, state: str, now: str,
                      last_tool: str | None, edited_file: str,
-                     prompt_started: bool) -> None:
+                     prompt_started: bool, notice_tag: str | None) -> None:
         with path.open("r", encoding="utf-8", newline="") as handle:
             text = handle.read()
         if f'wmux_surface = "{surface_id}"' not in text:
             return
         lines = self._edit_lines(text.splitlines(), state, now, last_tool,
-                                 edited_file, prompt_started)
+                                 edited_file, prompt_started, notice_tag)
         self._write_atomically(path, self._join(lines, text))
 
     def _write_atomically(self, path: Path, text: str) -> None:
@@ -62,13 +64,20 @@ class ActivityRecorder:
 
     def _edit_lines(self, lines: list[str], state: str, now: str,
                     last_tool: str | None, edited_file: str,
-                    prompt_started: bool) -> list[str]:
+                    prompt_started: bool, notice_tag: str | None) -> list[str]:
         lines = self._set_line(lines, "activity", f'activity = "{state}"')
         lines = self._set_line(lines, "activity_at", f'activity_at = "{now}"')
         if state == "idle":
             lines = [line for line in lines if not self._is_cleared_on_idle(line)]
         if prompt_started:
             lines = [line for line in lines if not self._is_key_line(line, "phase")]
+            lines = self._set_line(lines, "prompt_at", f'prompt_at = "{now}"')
+            if notice_tag is not None:
+                lines = self._set_line(lines, "prompt_notice",
+                                       f'prompt_notice = "{notice_tag}"')
+            else:
+                lines = [line for line in lines
+                         if not self._is_key_line(line, "prompt_notice")]
         if last_tool is not None:
             count = self._int_value(lines, "tool_calls") + 1
             lines = self._set_line(lines, "tool_calls", f"tool_calls = {count}")
@@ -163,8 +172,11 @@ def main() -> int:
         _follow_clear(payload, event, surface_id)
         state = EVENT_STATES.get(event)
         if state and surface_id:
+            prompt_started = event == "UserPromptSubmit"
+            notice_tag = (NoticePromptParser().parse(payload.get("prompt", ""))
+                          if prompt_started else None)
             ActivityRecorder().update(root, surface_id, state, now,
-                                      prompt_started=(event == "UserPromptSubmit"))
+                                      prompt_started=prompt_started, notice_tag=notice_tag)
         if surface_id and event in TOOL_EVENTS:
             activity = ToolEventClassifier().classify(payload)
             if activity is not None:
