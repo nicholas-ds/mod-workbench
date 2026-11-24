@@ -12,9 +12,10 @@ from workbench.notices.owner_id import OwnerId, OwnerKind
 NOW = datetime(2026, 11, 24, 12, 0, 0, tzinfo=timezone.utc)
 
 
-def _record(state: DeliveryState, last_try: str = "2026-11-24T10:00:00") -> DeliveryRecord:
+def _record(state: DeliveryState, last_try: str = "2026-11-24T10:00:00",
+            attempts: int = 2) -> DeliveryRecord:
     return DeliveryRecord(notice_id="n1", owner=OwnerId(OwnerKind.PANE, "boards-1"),
-                          state=state, attempts=2, last_try=last_try, error="")
+                          state=state, attempts=attempts, last_try=last_try, error="")
 
 
 def _notice() -> Notice:
@@ -30,14 +31,23 @@ def _signal(**fields: str) -> OwnerSignal:
 
 
 def _derive(state: DeliveryState, signal: OwnerSignal | None = None,
-            last_try: str = "2026-11-24T10:00:00", new_board_since: bool = False) -> LoopSnapshot:
-    inputs = LoopInputs(record=_record(state, last_try), notice=_notice(), signal=signal,
+            last_try: str = "2026-11-24T10:00:00", new_board_since: bool = False,
+            attempts: int = 2) -> LoopSnapshot:
+    inputs = LoopInputs(record=_record(state, last_try, attempts), notice=_notice(), signal=signal,
                         new_board_since=new_board_since, now=NOW)
     return LoopStageDeriver(StallLimits()).derive(inputs)
 
 
-def test_failed_record_is_stuck_and_can_retry() -> None:
-    snap = _derive(DeliveryState.FAILED)
+def test_failed_record_with_tries_left_is_sending_again() -> None:
+    snap = _derive(DeliveryState.FAILED, attempts=2)
+
+    assert snap.stage is LoopStage.SENDING
+    assert snap.reason == "Retrying"
+    assert snap.can_retry is False
+
+
+def test_failed_record_out_of_tries_is_stuck_and_can_retry() -> None:
+    snap = _derive(DeliveryState.FAILED, attempts=5)
 
     assert snap.stage is LoopStage.STUCK
     assert snap.reason == "Not delivered"

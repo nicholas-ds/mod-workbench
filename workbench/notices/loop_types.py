@@ -39,6 +39,7 @@ class StallLimits:
 
     not_seen_seconds: int = 180
     quiet_seconds: int = 600
+    retry_limit: int = 5
 
 
 @dataclass(frozen=True)

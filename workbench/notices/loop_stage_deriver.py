@@ -62,6 +62,9 @@ class LoopStageDeriver:
     def _from_failed(self, inputs: LoopInputs) -> _Outcome | None:
         if inputs.record.state is not DeliveryState.FAILED:
             return None
+        if inputs.record.attempts < self._limits.retry_limit:
+            return _Outcome(stage=LoopStage.SENDING, reason="Retrying",
+                            since=inputs.record.last_try)
         return _Outcome(stage=LoopStage.STUCK, reason="Not delivered",
                         since=inputs.record.last_try, can_retry=True)
 
