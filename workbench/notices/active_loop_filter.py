@@ -8,6 +8,7 @@ from workbench.notices.loop_types import LoopSnapshot, LoopStage
 
 _DONE_MAX_SECONDS = 600
 _OPEN_MAX_SECONDS = 21600
+_SUPERSEDED_REASON = "Moved on"
 _STAGE_ORDER = (LoopStage.STUCK, LoopStage.WORKING, LoopStage.GOT_IT,
                 LoopStage.SENDING, LoopStage.DONE)
 
@@ -24,6 +25,8 @@ class ActiveLoopFilter:
 
     def _is_active(self, snapshot: LoopSnapshot, now: datetime) -> bool:
         """Whether the snapshot's stage is young enough, False for bad `since`."""
+        if snapshot.reason == _SUPERSEDED_REASON:
+            return False
         try:
             since = self._since_of(snapshot)
         except ValueError:

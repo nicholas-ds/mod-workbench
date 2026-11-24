@@ -53,3 +53,11 @@ def test_stuck_first_and_done_last() -> None:
     assert [s.stage for s in kept] == [LoopStage.STUCK, LoopStage.WORKING,
                                        LoopStage.GOT_IT, LoopStage.SENDING,
                                        LoopStage.DONE]
+
+
+def test_superseded_loop_is_dropped() -> None:
+    moved_on = LoopSnapshot(notice_id="n1", board="b", owner="o", stage=LoopStage.DONE,
+                            reason="Moved on", since=iso_before(1), last_action="",
+                            summary="", can_retry=False)
+
+    assert ActiveLoopFilter().select([moved_on], NOW) == []

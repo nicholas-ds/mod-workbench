@@ -45,6 +45,10 @@ export class ApiClient {
     return this._send("GET", `${this._mod(mod)}/notices`);
   }
 
+  loops(mod) {
+    return this._send("GET", `${this._mod(mod)}/loops`);
+  }
+
   retryNotice(mod, id) {
     return this._send("POST", `${this._mod(mod)}/notices/${encodeURIComponent(id)}/retry`);
   }

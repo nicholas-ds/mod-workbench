@@ -63,7 +63,7 @@ export class ActivityReader {
     if (state === "idle") {
       const agents = row.agents ?? 0;
       const stalled = row.stalled_agents ?? 0;
-      return agents === 0 && stalled === 0 ? "nothing running" : ActivityReader._agentsLine(row);
+      return agents === 0 && stalled === 0 ? "" : ActivityReader._agentsLine(row);
     }
     const parts = [
       ActivityReader._lastFileLine(winner),

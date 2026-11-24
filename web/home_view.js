@@ -3,6 +3,7 @@
 import { AgentsView } from "./agents_view.js";
 import { ActivityReader } from "./activity_reader.js";
 import { DomBuilder } from "./dom_builder.js";
+import { LoopPillView } from "./loop_pill.js";
 import { ScrollableTable } from "./scrollable_table.js";
 import { OverviewView } from "./overview_view.js";
 import { StatusView } from "./status_view.js";
@@ -24,6 +25,7 @@ export class HomeView {
     this._filter = null;
     this._showBoardList = true;
     this._section = "mods";
+    this._loops = {};
   }
 
   setSection(section) {
@@ -89,10 +91,18 @@ export class HomeView {
 
   async _refreshRailCounts() {
     const mods = await this._api.mods();
-    const rail = this._rail(this._healthy(mods.rows));
+    const healthy = this._healthy(mods.rows);
+    await this._fetchLoops(healthy);
+    const rail = this._rail(healthy);
     const oldRail = this._root.querySelector(".rail");
     if (!oldRail) return;
     oldRail.replaceWith(rail);
+  }
+
+  async _fetchLoops(rows) {
+    const loops = await Promise.all(rows.map((row) =>
+      this._api.loops(row.name).then((body) => body.loops ?? []).catch(() => [])));
+    this._loops = Object.fromEntries(rows.map((row, index) => [row.name, loops[index]]));
   }
 
   async _page() {
@@ -100,6 +110,7 @@ export class HomeView {
     if (this._section === "chat") return this._chatPage();
     const mods = await this._api.mods();
     const healthy = this._healthy(mods.rows);
+    await this._fetchLoops(healthy);
     const boards = await this._boardsTable(this._filtered(healthy));
     const agents = await this._api.agents();
     return this._layout(mods.rows, boards, agents.agents);
@@ -200,6 +211,8 @@ export class HomeView {
     item.appendChild(DomBuilder.el("em", "count", String(row.open_boards)));
     if (activity.task) item.appendChild(DomBuilder.el("small", "rail-task", activity.task));
     if (activity.fine) item.appendChild(DomBuilder.el("small", "rail-fine", activity.fine));
+    const pill = LoopPillView.render(this._loops[row.name] || [], new Date());
+    if (pill) item.appendChild(pill);
     item.classList.toggle("is-selected", row.name === this._filter);
     item.addEventListener("click", () => this._toggleFilter(row.name));
     return item;
