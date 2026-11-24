@@ -136,6 +136,13 @@ export class ChatView extends ConversationPanel {
     if (this._orchestrator === orchestrator) this.open(this._tabs.selectedName());
   }
 
+  _updateSwitch() {
+    for (const [name, button] of this._buttons) {
+      button.classList.toggle("is-selected", name === this._orchestrator);
+      button.setAttribute("aria-current", name === this._orchestrator ? "true" : "false");
+    }
+  }
+
   async _refreshBackend(name) {
     const info = await this._chatStream.sessionInfo(name);
     this._backends.setActive(info.backend ?? null);
