@@ -7,7 +7,7 @@ from workbench.notices.board_owner_store import BoardOwnerStore
 from workbench.notices.owner_id import OwnerId, OwnerKind
 from workbench.notices.owner_resolver import OwnerResolution, OwnerResolver
 
-_FALLBACK = OwnerId(OwnerKind.PANE, "orchestrator")
+_FALLBACK = OwnerId(OwnerKind.REPO, "StarfieldLogistics")
 
 
 def _always(owner: OwnerId) -> bool:
@@ -51,7 +51,7 @@ def test_resolver_falls_back_with_known_false_when_raised_by_missing(tmp_path: P
     assert resolver.resolve(_board(tmp_path, "")) == OwnerResolution(_FALLBACK, False)
 
 
-def test_unreachable_owner_falls_back_and_is_marked_unknown(tmp_path: Path) -> None:
+def test_gone_owner_resolves_to_a_new_session_in_the_repo(tmp_path: Path) -> None:
     resolver = OwnerResolver(BoardOwnerStore(), _FALLBACK, lambda owner: False)
 
     resolution = resolver.resolve(_board(tmp_path, "chat-review"))

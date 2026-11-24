@@ -30,7 +30,7 @@ def test_labels_cover_every_state() -> None:
     assert build(_record(DeliveryState.FRESH_STARTED), "b").label == "Started a fresh session"
     assert build(_record(DeliveryState.PENDING), "b").label == "Waiting to deliver"
     assert build(_record(DeliveryState.FAILED), "b").label == "Not delivered"
-    assert build(_record(DeliveryState.UNKNOWN_OWNER), "b").label == "Sent to the default owner"
+    assert build(_record(DeliveryState.UNKNOWN_OWNER), "b").label == "Sent to a new session in the repo"
 
 
 def test_as_json_carries_every_field() -> None:

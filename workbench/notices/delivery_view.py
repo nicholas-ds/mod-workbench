@@ -11,7 +11,7 @@ _LABELS: dict[DeliveryState, str] = {
     DeliveryState.FRESH_STARTED: "Started a fresh session",
     DeliveryState.PENDING: "Waiting to deliver",
     DeliveryState.FAILED: "Not delivered",
-    DeliveryState.UNKNOWN_OWNER: "Sent to the default owner",
+    DeliveryState.UNKNOWN_OWNER: "Sent to a new session in the repo",
 }
 
 

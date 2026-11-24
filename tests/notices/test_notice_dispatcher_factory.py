@@ -34,6 +34,17 @@ class FakePaneSender:
         return True
 
 
+class FakeChatSink:
+    """Record every chat turn as (thread name, text)."""
+
+    def __init__(self) -> None:
+        self.turns: list[tuple[str, str]] = []
+
+    def send(self, name: str, text: str) -> bool:
+        self.turns.append((name, text))
+        return True
+
+
 class FakeBackend:
     """A backend that cannot measure context."""
 
@@ -63,10 +74,11 @@ def _config(tmp_path: Path) -> ModConfig:
                      exports=tmp_path)
 
 
-def _factory(tmp_path: Path, sender: FakePaneSender) -> NoticeDispatcherFactory:
+def _factory(tmp_path: Path, sender: FakePaneSender,
+             chat_sink: FakeChatSink | None = None) -> NoticeDispatcherFactory:
     return NoticeDispatcherFactory(
         pane_directory=FakePaneDirectory(_entry(tmp_path, 'activity = "busy"\n')),
-        pane_sender=sender, chat_sink=None,
+        pane_sender=sender, chat_sink=chat_sink,
         thread_registry=ThreadRegistry(tmp_path / "threads.json"),
         backends=FakeBackends(), now=lambda: "2026-11-23T10:00:00",
         new_id=lambda: "n1")
@@ -86,40 +98,16 @@ def test_build_returns_dispatcher(tmp_path: Path) -> None:
     assert isinstance(dispatcher, NoticeDispatcher)
 
 
-def test_no_owner_resolves_to_fallback_orchestrator(tmp_path: Path) -> None:
+def test_no_owner_starts_a_new_session_in_the_repo(tmp_path: Path) -> None:
+    chat_sink = FakeChatSink()
     sender = FakePaneSender()
-    dispatcher = _factory(tmp_path, sender).build(_config(tmp_path))
+    dispatcher = _factory(tmp_path, sender, chat_sink).build(_config(tmp_path))
 
     record = dispatcher.dispatch(_board(tmp_path), "question",
                                  "boards/open/b1/board.md")
 
-    assert record.owner == OwnerId(OwnerKind.PANE, ORCHESTRATOR_NAME)
+    assert record.owner == OwnerId(OwnerKind.REPO, "demo")
     assert record.state is DeliveryState.UNKNOWN_OWNER
-    assert len(sender.lines) == 1
-    assert sender.lines[0].startswith("[workbench] board=")
-
-
-def test_idle_pane_with_high_context_gets_handoff_prompt(tmp_path: Path) -> None:
-    sender = FakePaneSender()
-    factory = NoticeDispatcherFactory(
-        pane_directory=FakePaneDirectory(
-            _entry(tmp_path, 'activity = "idle"\ncontext_percent = 50.0\n')),
-        pane_sender=sender, chat_sink=None,
-        thread_registry=ThreadRegistry(tmp_path / "threads.json"),
-        backends=FakeBackends(), now=lambda: "t", new_id=lambda: "n1")
-    notes = tmp_path / "notes"
-    notes.mkdir()
-    (notes / "handoff-1.md").write_text("the handoff", encoding="utf-8")
-    board = _board(tmp_path)
-    (board.folder / "owner.json").write_text(
-        '{"owner": "pane:main-orchestrator"}', encoding="utf-8")
-
-    record = factory.build(_config(tmp_path)).dispatch(board, "question",
-                                                       "boards/open/b1/board.md")
-
-    assert record.state is DeliveryState.FRESH_STARTED
-    assert sender.lines[0] == "/clear"
-    assert sender.lines[1].startswith("Fresh session started by the workbench.")
-    assert "the handoff" in sender.lines[1]
-    assert sender.lines[1].endswith("[workbench] board=b1 "
-                                    "event=question. Read boards/open/b1/board.md.")
+    assert sender.lines == []
+    assert [name for name, _ in chat_sink.turns] == ["demo~t1"]
+    assert chat_sink.turns[0][1].startswith("[workbench] board=")

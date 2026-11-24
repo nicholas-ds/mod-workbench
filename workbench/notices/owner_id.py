@@ -11,6 +11,7 @@ class OwnerKind(Enum):
 
     PANE = "pane"
     CHAT = "chat"
+    REPO = "repo"
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,6 @@ class OwnerId:
         if text.startswith("chat-"):
             return OwnerId(OwnerKind.CHAT, text.removeprefix("chat-"))
         kind, sep, key = text.partition(":")
-        if sep and kind in (OwnerKind.PANE.value, OwnerKind.CHAT.value):
+        if sep and kind in tuple(kind.value for kind in OwnerKind):
             return OwnerId(OwnerKind(kind), key)
         return OwnerId(OwnerKind.PANE, text)

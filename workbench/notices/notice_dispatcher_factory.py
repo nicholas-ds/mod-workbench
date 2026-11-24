@@ -8,7 +8,7 @@ from pathlib import Path
 from workbench.chat.chat_backend_resolver import ChatBackendResolver
 from workbench.chat.thread_registry import ChatThread, ThreadRegistry
 from workbench.core.config import ModConfig
-from workbench.mods.pane_directory import ORCHESTRATOR_NAME, PaneDirectory
+from workbench.mods.pane_directory import PaneDirectory
 from workbench.notices.board_owner_store import BoardOwnerStore
 from workbench.notices.chat_recipient import ChatRecipient
 from workbench.notices.context_policy import ContextPolicy
@@ -21,6 +21,7 @@ from workbench.notices.owner_resolver import OwnerResolver
 from workbench.notices.pane_activity_reader import PaneActivityReader
 from workbench.notices.pane_context_reader import PaneContextReader
 from workbench.notices.pane_recipient import PaneRecipient
+from workbench.notices.repo_session_recipient import RepoSessionRecipient
 from workbench.notices.recipient_resolver import RecipientResolver
 from workbench.panes.chat_turn_sink import ChatTurnSink
 from workbench.panes.pane_registry import OrchestratorPane
@@ -79,11 +80,15 @@ class NoticeDispatcherFactory:
             self._is_known,
             lambda name: ChatThread.split_name(name)[0],
             lambda orchestrator: self._thread_registry.add(orchestrator).name)
+        repo_recipient = RepoSessionRecipient(
+            self._send_turn(),
+            lambda orchestrator: self._thread_registry.add(orchestrator).name)
         recipients = RecipientResolver({OwnerKind.PANE: pane_recipient,
-                                        OwnerKind.CHAT: chat_recipient})
+                                        OwnerKind.CHAT: chat_recipient,
+                                        OwnerKind.REPO: repo_recipient})
         return NoticeDispatcher(
             owner_resolver=OwnerResolver(
-                BoardOwnerStore(), OwnerId(OwnerKind.PANE, ORCHESTRATOR_NAME),
+                BoardOwnerStore(), OwnerId(OwnerKind.REPO, cfg.name),
                 lambda owner: recipients.resolve(owner).is_reachable(owner)),
             composer=NoticeComposer(), inbox=OwnerInbox.of_mod(cfg.repo),
             recipient_resolver=recipients,
