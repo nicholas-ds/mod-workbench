@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 
+from workbench.notices.loop_types import LoopSnapshot, LoopStage
 from workbench.notices.notice_types import DeliveryRecord, DeliveryState, Notice
 from workbench.notices.owner_id import OwnerId
 
@@ -41,10 +42,24 @@ class OwnerInbox:
         temp.write_text(json.dumps(payload), encoding="utf-8")
         os.replace(temp, path)
 
+    def update_loop(self, record: DeliveryRecord, snapshot: LoopSnapshot) -> None:
+        """Write the loop snapshot into the stored notice file, atomically."""
+        path = self._path(record.owner, record.notice_id)
+        payload = self._load(path)
+        payload["loop"] = {**vars(snapshot), "stage": snapshot.stage.value}
+        temp = path.with_suffix(".tmp")
+        temp.write_text(json.dumps(payload), encoding="utf-8")
+        os.replace(temp, path)
+
     def notice_of(self, record: DeliveryRecord) -> Notice | None:
         """Return the stored Notice of that record, None when missing."""
         payload = self._load(self._path(record.owner, record.notice_id))
         return self._notice(payload.get("notice"))
+
+    def loop_of(self, record: DeliveryRecord) -> LoopSnapshot | None:
+        """Return the stored loop snapshot of that record, None when missing or invalid."""
+        payload = self._load(self._path(record.owner, record.notice_id))
+        return self._loop(payload.get("loop"))
 
     def list_records(self, owner: OwnerId) -> list[DeliveryRecord]:
         """Return the owner's records, newest first."""
@@ -104,6 +119,20 @@ class OwnerInbox:
                                   state=DeliveryState(str(source["state"])),
                                   attempts=int(source["attempts"]),
                                   last_try=str(source["last_try"]), error=str(source["error"]))
+        except (ValueError, KeyError, TypeError):
+            return None
+
+    @staticmethod
+    def _loop(data: object) -> LoopSnapshot | None:
+        source: dict[str, object] = data if isinstance(data, dict) else {}
+        try:
+            return LoopSnapshot(notice_id=str(source["notice_id"]),
+                                board=str(source["board"]), owner=str(source["owner"]),
+                                stage=LoopStage(str(source["stage"])),
+                                reason=str(source["reason"]), since=str(source["since"]),
+                                last_action=str(source["last_action"]),
+                                summary=str(source["summary"]),
+                                can_retry=bool(source["can_retry"]))
         except (ValueError, KeyError, TypeError):
             return None
 

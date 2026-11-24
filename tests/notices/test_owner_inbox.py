@@ -1,7 +1,9 @@
 """Tests for OwnerInbox: write, update, list and pending records."""
 
+import json
 from pathlib import Path
 
+from workbench.notices.loop_types import LoopSnapshot, LoopStage
 from workbench.notices.notice_types import DeliveryRecord, DeliveryState, Notice
 from workbench.notices.owner_id import OwnerId, OwnerKind
 from workbench.notices.owner_inbox import OwnerInbox
@@ -109,3 +111,52 @@ def test_all_records_spans_owners_newest_first(tmp_path: Path) -> None:
     records = inbox.all_records()
 
     assert [record.notice_id for record in records] == ["n2", "n1"]
+
+
+def _snapshot(notice_id: str) -> LoopSnapshot:
+    return LoopSnapshot(notice_id=notice_id, board="b1", owner="pane:boards-1",
+                        stage=LoopStage.WORKING, reason="Tool",
+                        since="2026-11-23T10:02:00+00:00", last_action="write",
+                        summary="editing", can_retry=False)
+
+
+def test_update_loop_then_loop_of_round_trips(tmp_path: Path) -> None:
+    inbox = OwnerInbox(tmp_path)
+    record = inbox.write(_notice("n1", "2026-11-23T10:00:00"), True)
+    snapshot = _snapshot("n1")
+
+    inbox.update_loop(record, snapshot)
+
+    assert inbox.loop_of(record) == snapshot
+
+
+def test_loop_of_returns_none_when_loop_key_is_missing(tmp_path: Path) -> None:
+    inbox = OwnerInbox(tmp_path)
+    record = inbox.write(_notice("n1", "2026-11-23T10:00:00"), True)
+
+    assert inbox.loop_of(record) is None
+
+
+def test_loop_of_returns_none_when_snapshot_is_invalid(tmp_path: Path) -> None:
+    inbox = OwnerInbox(tmp_path)
+    record = inbox.write(_notice("n1", "2026-11-23T10:00:00"), True)
+    path = tmp_path / "pane_boards-1" / "n1.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["loop"] = {"stage": "not-a-stage"}
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    assert inbox.loop_of(record) is None
+
+
+def test_update_after_update_loop_keeps_the_loop_snapshot(tmp_path: Path) -> None:
+    inbox = OwnerInbox(tmp_path)
+    notice = _notice("n1", "2026-11-23T10:00:00")
+    record = inbox.write(notice, True)
+    inbox.update_loop(record, _snapshot("n1"))
+    updated = DeliveryRecord(notice_id="n1", owner=notice.owner,
+                             state=DeliveryState.DELIVERED, attempts=1,
+                             last_try="2026-11-23T10:01:00", error="")
+
+    inbox.update(updated)
+
+    assert inbox.loop_of(updated) == _snapshot("n1")
