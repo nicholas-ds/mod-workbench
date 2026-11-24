@@ -45,3 +45,13 @@ def test_reads_percent_from_stdin_json() -> None:
 def test_main_always_returns_zero(monkeypatch) -> None:
     monkeypatch.setattr(sys, "stdin", io.StringIO("not json"))
     assert context_recorder.main() == 0
+
+
+def test_clear_forgets_the_stale_context_percent(tmp_path: Path) -> None:
+    from activity_hook import ActivityRecorder
+
+    root = make_root(tmp_path, 'wmux_surface = "s1"\ncontext_percent = 92\nactivity = "working"\n')
+    ActivityRecorder().forget_context(root, "s1")
+    text = (root / "repo/status/a.toml").read_text(encoding="utf-8")
+    assert "context_percent" not in text and 'activity = "working"' in text
+    assert (root / "repo/status/b.toml").read_text(encoding="utf-8") == 'wmux_surface = "other"\n'

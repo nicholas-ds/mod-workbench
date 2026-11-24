@@ -41,6 +41,22 @@ class ActivityRecorder:
             except OSError:
                 continue
 
+    def forget_context(self, root: Path, surface_id: str) -> None:
+        for path in self._candidate_paths(root):
+            try:
+                self._forget_context_in_file(path, surface_id)
+            except OSError:
+                continue
+
+    def _forget_context_in_file(self, path: Path, surface_id: str) -> None:
+        with path.open("r", encoding="utf-8", newline="") as handle:
+            text = handle.read()
+        if f'wmux_surface = "{surface_id}"' not in text:
+            return
+        lines = [line for line in text.splitlines()
+                 if not self._is_key_line(line, "context_percent")]
+        self._write_atomically(path, self._join(lines, text))
+
     def _candidate_paths(self, root: Path) -> list[Path]:
         found = {path for pattern in GLOB_PATTERNS for path in root.glob(pattern)}
         return sorted(found)
@@ -193,6 +209,8 @@ def main() -> int:
             if block:
                 print(block)
         if surface_id and event == "SessionStart":
+            if payload.get("source") == "clear":
+                ActivityRecorder().forget_context(root, surface_id)
             handle_session_start(payload, surface_id, root)
     except Exception:
         _log_error()
