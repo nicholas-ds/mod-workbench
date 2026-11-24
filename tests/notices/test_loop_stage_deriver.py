@@ -114,3 +114,18 @@ def test_taken_idle_finishing_is_done_else_stuck() -> None:
     stuck = _derive(DeliveryState.DELIVERED, _signal(activity="idle"))
     assert stuck.stage is LoopStage.STUCK
     assert stuck.reason == "Idle, no reply"
+
+
+def test_newer_prompt_of_another_notice_ends_the_loop() -> None:
+    signal = _signal(prompt_notice="other changed", prompt_at="2026-11-24T11:00:00")
+
+    snapshot = _derive(DeliveryState.DELIVERED, signal)
+
+    assert snapshot.stage is LoopStage.DONE
+    assert snapshot.reason == "Moved on"
+
+
+def test_older_prompt_of_another_notice_does_not_end_the_loop() -> None:
+    signal = _signal(prompt_notice="other changed", prompt_at="2026-11-24T09:00:00")
+
+    assert _derive(DeliveryState.DELIVERED, signal).stage is LoopStage.STUCK

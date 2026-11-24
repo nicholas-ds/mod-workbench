@@ -38,7 +38,8 @@ class LoopStageDeriver:
 
     def _decide(self, inputs: LoopInputs, taken: bool) -> _Outcome:
         steps = (self._from_failed(inputs), self._from_pending(inputs, taken),
-                 self._from_unseen(inputs, taken), self._from_needs_you(inputs, taken),
+                 self._from_superseded(inputs, taken), self._from_unseen(inputs, taken),
+                 self._from_needs_you(inputs, taken),
                  self._from_working(inputs, taken), self._from_idle(inputs, taken))
         for step in steps:
             if step is not None:
@@ -68,6 +69,17 @@ class LoopStageDeriver:
         if taken or inputs.record.state is not DeliveryState.PENDING:
             return None
         return _Outcome(stage=LoopStage.SENDING, since=inputs.record.last_try)
+
+    def _from_superseded(self, inputs: LoopInputs, taken: bool) -> _Outcome | None:
+        signal = inputs.signal
+        sent = (DeliveryState.DELIVERED, DeliveryState.FRESH_STARTED, DeliveryState.UNKNOWN_OWNER)
+        if taken or signal is None or inputs.record.state not in sent:
+            return None
+        prompt_at = self._parse(signal.prompt_at)
+        last_try = self._parse(inputs.record.last_try)
+        if prompt_at is None or last_try is None or prompt_at <= last_try:
+            return None
+        return _Outcome(stage=LoopStage.DONE, reason="Moved on", since=signal.prompt_at)
 
     def _from_unseen(self, inputs: LoopInputs, taken: bool) -> _Outcome | None:
         unseen = (DeliveryState.DELIVERED, DeliveryState.FRESH_STARTED, DeliveryState.UNKNOWN_OWNER)
