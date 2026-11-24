@@ -1,13 +1,14 @@
 // The live-loop pill shown in a rail row, worst loop first.
 
 import { DomBuilder } from "./dom_builder.js";
+import { LoopPopover } from "./loop_popover.js";
 
 const LABEL = { sending: "Sending", got_it: "Got it", working: "Working", done: "Done", stuck: "Stuck" };
 const MIN_S = 60;
 const HOUR_S = 3600;
 
 export class LoopPillView {
-  static render(loops, now) {
+  static render(loops, now, options = {}) {
     const loop = loops[0];
     if (!loop) return null;
     const pill = DomBuilder.el("i", `loop-pill loop-${String(loop.stage ?? "").replaceAll("_", "-")}`);
@@ -17,6 +18,15 @@ export class LoopPillView {
     pill.title = LoopPillView._title(loop);
     const slot = DomBuilder.el("i", "loop-slot");
     slot.appendChild(pill);
+    pill.tabIndex = 0;
+    const open = (event) => {
+      event.stopPropagation();
+      LoopPopover.open(slot, loops, options);
+    };
+    pill.addEventListener("click", open);
+    pill.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") open(event);
+    });
     return slot;
   }
 

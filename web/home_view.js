@@ -211,7 +211,11 @@ export class HomeView {
     item.appendChild(DomBuilder.el("em", "count", String(row.open_boards)));
     if (activity.task) item.appendChild(DomBuilder.el("small", "rail-task", activity.task));
     if (activity.fine) item.appendChild(DomBuilder.el("small", "rail-fine", activity.fine));
-    const pill = LoopPillView.render(this._loops[row.name] || [], new Date());
+    const pill = LoopPillView.render(this._loops[row.name] || [], new Date(), {
+      api: this._api,
+      modName: row.name,
+      onRetried: () => this._refreshRailCounts(),
+    });
     if (pill) item.appendChild(pill);
     item.classList.toggle("is-selected", row.name === this._filter);
     item.addEventListener("click", () => this._toggleFilter(row.name));
