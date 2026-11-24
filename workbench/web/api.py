@@ -19,10 +19,13 @@ from workbench.boards.board_repository import BoardRepository
 from workbench.core.config import ModDiscovery
 from workbench.agents.claude_translator import ClaudeEventTranslator
 from workbench.web.chat_assembly import ChatAssembly
+from workbench.notices.active_loop_filter import ActiveLoopFilter
 from workbench.notices.delivery_view import DeliveryViewBuilder
+from workbench.notices.loop_tracker_factory import LoopTrackerFactory
 from workbench.notices.owner_inbox import OwnerInbox
 from workbench.server.all_mods_retry_job import AllModsRetryJob
 from workbench.server.chat_shutdown_job import ChatShutdownJob
+from workbench.web.routes_loops import LoopRoutes
 from workbench.web.routes_notices import NoticesRoutes
 from workbench.chat.chat_command import SlashCommandParser
 from workbench.panes.chat_turn_sink import RunnerChatTurnSink
@@ -134,6 +137,7 @@ class ApiFactory:
                  roots: list[Path]) -> list[APIRouter]:
         directory = OrchestratorDirectory(registry, roots[0])
         pane_directory = PaneDirectory(registry, _workbench_root())
+        loop_factory = LoopTrackerFactory(pane_directory, lambda: datetime.now(UTC))
         permissions = PendingPermissionStore()
         cards = PermissionCardBuilder()
         stack = ChatAssembly().build(
@@ -162,6 +166,8 @@ class ApiFactory:
                            pane_directory=pane_directory),
             NoticesRoutes(registry, lambda cfg: OwnerInbox.of_mod(cfg.repo),
                           factory.build, DeliveryViewBuilder()),
+            LoopRoutes(registry, loop_factory.build, lambda cfg: OwnerInbox.of_mod(cfg.repo),
+                       ActiveLoopFilter(), lambda: datetime.now(UTC)),
             DetailRoutes(registry, ModDetailReader()),
             OverviewRoutes(registry, TaskOverviewReader(), roots[0] / "tracking.md"),
             EventsRoutes(self._watcher, registry),
