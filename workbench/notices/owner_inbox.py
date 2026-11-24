@@ -51,6 +51,20 @@ class OwnerInbox:
         temp.write_text(json.dumps(payload), encoding="utf-8")
         os.replace(temp, path)
 
+    def mark_pinged(self, record: DeliveryRecord) -> None:
+        """Set the pinged flag in the stored notice file, atomically."""
+        path = self._path(record.owner, record.notice_id)
+        payload = self._load(path)
+        payload["pinged"] = True
+        temp = path.with_suffix(".tmp")
+        temp.write_text(json.dumps(payload), encoding="utf-8")
+        os.replace(temp, path)
+
+    def was_pinged(self, record: DeliveryRecord) -> bool:
+        """True when the stored notice file carries a true pinged flag."""
+        payload = self._load(self._path(record.owner, record.notice_id))
+        return payload.get("pinged") is True
+
     def notice_of(self, record: DeliveryRecord) -> Notice | None:
         """Return the stored Notice of that record, None when missing."""
         payload = self._load(self._path(record.owner, record.notice_id))

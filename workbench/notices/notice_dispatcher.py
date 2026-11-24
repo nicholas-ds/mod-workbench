@@ -41,6 +41,14 @@ class NoticeDispatcher:
         record = self._inbox.write(notice, resolution.known)
         return self._deliver(notice, record, resolution.known)
 
+    def ping(self, notice: Notice) -> DeliveryRecord:
+        """Deliver a fresh stuck ping about that notice."""
+        ping_notice = self._composer.compose_ping(self._new_id(), notice.board,
+                                                  notice.owner, notice.file_path,
+                                                  self._now())
+        record = self._inbox.write(ping_notice, True)
+        return self._deliver(ping_notice, record, True)
+
     def redeliver(self, record: DeliveryRecord) -> DeliveryRecord:
         """Deliver again unless the notice is gone or the retry limit is hit."""
         notice = self._inbox.notice_of(record)

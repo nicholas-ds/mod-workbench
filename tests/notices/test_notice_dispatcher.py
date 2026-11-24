@@ -129,3 +129,24 @@ def test_redeliver_without_stored_notice_returns_record(tmp_path: Path) -> None:
 
     assert dispatcher.redeliver(ghost) is ghost
     assert recipient.sent == []
+
+
+def test_ping_writes_and_delivers_a_new_stuck_notice(tmp_path: Path) -> None:
+    recipient = FakeRecipient(_traits())
+    inbox = OwnerInbox(tmp_path)
+    dispatcher = _dispatcher(tmp_path, recipient, known=True)
+    seed = NoticeComposer().compose(notice_id="seed", event="answer", board_id="b1",
+                                    owner=OWNER, file_path="boards/open/b1/board.md",
+                                    created="2026-11-23T10:00:00")
+
+    record = dispatcher.ping(seed)
+
+    assert record.notice_id == "n1"
+    assert record.state is DeliveryState.DELIVERED
+    assert record.attempts == 1
+    assert len(recipient.sent) == 1
+    assert "event=stuck" in recipient.sent[0]
+    stored = inbox.notice_of(record)
+    assert stored is not None
+    assert stored.id == "n1"
+    assert stored.event == "stuck"

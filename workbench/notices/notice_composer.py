@@ -29,3 +29,26 @@ class NoticeComposer:
             line=line,
             created=created,
         )
+
+    def compose_ping(
+        self,
+        notice_id: str,
+        board_id: str,
+        owner: OwnerId,
+        file_path: str,
+        created: str,
+    ) -> Notice:
+        """Bind the stuck event to its owner with the exact ping line."""
+        line = (f"[workbench] board={board_id} event=stuck. "
+                f"You did not reply to the answers of board {board_id}. "
+                "Say why in one line on the board, or run /handoff. "
+                f"Read {file_path}.")
+        return Notice(
+            id=notice_id,
+            owner=owner,
+            board=board_id,
+            event="stuck",
+            file_path=file_path,
+            line=line,
+            created=created,
+        )

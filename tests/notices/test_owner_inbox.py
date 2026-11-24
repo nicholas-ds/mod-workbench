@@ -160,3 +160,24 @@ def test_update_after_update_loop_keeps_the_loop_snapshot(tmp_path: Path) -> Non
     inbox.update(updated)
 
     assert inbox.loop_of(updated) == _snapshot("n1")
+
+
+def test_mark_pinged_and_was_pinged_round_trip(tmp_path: Path) -> None:
+    inbox = OwnerInbox(tmp_path)
+    record = inbox.write(_notice("n1", "2026-11-23T10:00:00"), True)
+
+    assert inbox.was_pinged(record) is False
+
+    inbox.mark_pinged(record)
+
+    assert inbox.was_pinged(record) is True
+
+
+def test_update_loop_keeps_the_pinged_flag(tmp_path: Path) -> None:
+    inbox = OwnerInbox(tmp_path)
+    record = inbox.write(_notice("n1", "2026-11-23T10:00:00"), True)
+    inbox.mark_pinged(record)
+
+    inbox.update_loop(record, _snapshot("n1"))
+
+    assert inbox.was_pinged(record) is True

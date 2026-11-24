@@ -62,3 +62,18 @@ def test_compose_is_pure_and_repeatable() -> None:
     first = compose()
     second = compose()
     assert first == second
+
+
+def test_compose_ping_line_is_exact() -> None:
+    notice = NoticeComposer().compose_ping(
+        notice_id="n-2",
+        board_id="b1",
+        owner=make_owner(),
+        file_path="a.md",
+        created="2026-11-23T10:00:00",
+    )
+    assert notice.line == (
+        "[workbench] board=b1 event=stuck. You did not reply to the answers of "
+        "board b1. Say why in one line on the board, or run /handoff. Read a.md."
+    )
+    assert notice.event == "stuck"
