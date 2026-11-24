@@ -12,6 +12,7 @@ CHAT_SESSION_ENV = "WORKBENCH_CHAT_SESSION"
 CHAT_OWNER_ENV = "WORKBENCH_CHAT_OWNER"
 ASK_TOOL = "AskUserQuestion"
 CHAT_MODEL = "sonnet"
+MAX_STREAM_BYTES = 64 * 1024 * 1024  # a pasted image read exceeds the 1 MB SDK default and kills the reader
 
 
 class FolderLookup(Protocol):
@@ -48,5 +49,6 @@ class SdkClientFactory:
                 "append": self._note.text(name),
             },
             disallowed_tools=[ASK_TOOL],
+            max_buffer_size=MAX_STREAM_BYTES,
         )
         return ClaudeSDKClient(options=options)

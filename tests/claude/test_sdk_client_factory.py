@@ -90,3 +90,8 @@ def test_model_can_be_overridden_in_the_constructor() -> None:
     factory = SdkClientFactory(FakeDirectory(), model="opus")
     client = factory.create("mod-a", "")
     assert client.options.model == "opus"
+
+
+def test_stream_buffer_holds_a_pasted_image_read() -> None:
+    client = make_factory().create("mod-a", resume="")
+    assert client.options.max_buffer_size >= 32 * 1024 * 1024
