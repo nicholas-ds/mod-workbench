@@ -1,4 +1,4 @@
-"""HTTP transport to a running OpenCode 2.3.0 server.
+"""HTTP transport to a running OpenCode 2.3.0 server (v2 `/api` routes).
 
 Pure transport: every method maps to one route, unwraps the {"data": ...}
 envelope and returns the payload. No server start, no chat logic.
@@ -37,38 +37,38 @@ class OpencodeHttpClient:
 
     async def create_session(self, title: str, directory: str) -> str:
         body = {"title": title, "model": _MODEL, "location": {"directory": directory}}
-        data = cast(dict[str, Any], await self._call("POST", "/session", body))
+        data = cast(dict[str, Any], await self._call("POST", "/api/session", body))
         return str(data["id"])
 
     async def prompt(self, session_id: str, text: str) -> None:
-        await self._call("POST", f"/session/{session_id}/prompt", {"text": text})
+        await self._call("POST", f"/api/session/{session_id}/prompt", {"text": text})
 
     async def interrupt(self, session_id: str) -> None:
-        await self._call("POST", f"/session/{session_id}/interrupt", None)
+        await self._call("POST", f"/api/session/{session_id}/interrupt", None)
 
     async def add_synthetic(self, session_id: str, text: str) -> None:
-        await self._call("POST", f"/session/{session_id}/synthetic", {"text": text})
+        await self._call("POST", f"/api/session/{session_id}/synthetic", {"text": text})
 
     async def delete_session(self, session_id: str) -> None:
-        await self._call("DELETE", f"/session/{session_id}", None)
+        await self._call("DELETE", f"/api/session/{session_id}", None)
 
     async def messages(self, session_id: str) -> list[dict]:
-        path = f"/session/{session_id}/message"
+        path = f"/api/session/{session_id}/message"
         return cast(list[dict], await self._call("GET", path, None))
 
     async def is_active(self, session_id: str) -> bool:
-        data = cast(dict, await self._call("GET", "/session/active", None))
+        data = cast(dict, await self._call("GET", "/api/session/active", None))
         return session_id in data
 
     async def permission_requests(self, session_id: str) -> list[dict]:
-        pending = cast(list[dict], await self._call("GET", "/permission/request", None))
+        pending = cast(list[dict], await self._call("GET", "/api/permission/request", None))
         return [item for item in pending if item.get("sessionID") == session_id]
 
     async def answer_permission(
         self, session_id: str, request_id: str, allow: bool
     ) -> None:
         decision = "once" if allow else "reject"
-        path = f"/session/{session_id}/permission/{request_id}/reply"
+        path = f"/api/session/{session_id}/permission/{request_id}/reply"
         await self._call("POST", path, {"decision": decision})
 
     async def _call(self, method: str, path: str, body: dict | None) -> object:

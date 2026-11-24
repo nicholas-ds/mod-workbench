@@ -1,10 +1,11 @@
 """Count busy OpenCode worker sessions per mod repo (Task B).
 
 An `opencode serve` is an `opencode.exe` process listening on one localhost
-TCP port. `/session/status` lists only busy sessions; `/session` maps ids to
-directories and `time.updated` epoch milliseconds. A busy session whose
-update is at most `active_seconds` old is active; an older one is stalled
-(its client died). This module never raises: any error yields no workers.
+TCP port. `/api/session/active` lists only running sessions; `/api/session`
+lists sessions with their location directory and `time.updated` epoch
+milliseconds. A running session whose update is at most `active_seconds` old
+is active; an older one is stalled (its client died). This module never
+raises: any error yields no workers.
 """
 
 from __future__ import annotations
@@ -91,18 +92,24 @@ class OpencodeSessionClient:
 
     def busy_sessions(self, port: int) -> list[BusySession]:
         try:
-            status = self._get_json(f"http://127.0.0.1:{port}/session/status")
-            sessions = self._get_json(f"http://127.0.0.1:{port}/session")
+            active = self._get_json(f"http://127.0.0.1:{port}/api/session/active")
+            sessions = self._get_json(f"http://127.0.0.1:{port}/api/session")
         except Exception:
             return []
-        busy_ids = self._busy_ids(status)
-        return self._sessions_of(sessions, busy_ids)
+        busy_ids = self._busy_ids(self._unwrap(active))
+        return self._sessions_of(self._unwrap(sessions), busy_ids)
+
+    def _unwrap(self, payload: object) -> object:
+        """Open the v2 {"data": ...} envelope; pass anything else through."""
+        if isinstance(payload, dict) and "data" in payload:
+            return payload["data"]
+        return payload
 
     def _busy_ids(self, status: object) -> set[str]:
         if not isinstance(status, dict):
             return set()
         return {session_id for session_id, value in status.items()
-                if isinstance(value, dict) and value.get("type") == "busy"}
+                if isinstance(value, dict) and value.get("type") == "running"}
 
     def _sessions_of(self, sessions: object, busy_ids: set[str]) -> list[BusySession]:
         if not isinstance(sessions, list):
@@ -117,7 +124,9 @@ class OpencodeSessionClient:
     def _busy_session(self, session: object, busy_ids: set[str]) -> BusySession | None:
         if not isinstance(session, dict) or session.get("id") not in busy_ids:
             return None
-        directory, updated = session.get("directory"), self._updated_ms(session)
+        location = session.get("location")
+        directory = location.get("directory") if isinstance(location, dict) else None
+        updated = self._updated_ms(session)
         if not isinstance(directory, str) or updated is None:
             return None
         return BusySession(directory=directory, updated_ms=updated)
@@ -127,7 +136,9 @@ class OpencodeSessionClient:
         if not isinstance(times, dict):
             return None
         updated = times.get("updated")
-        return updated if isinstance(updated, int) else None
+        if isinstance(updated, bool) or not isinstance(updated, (int, float)):
+            return None
+        return int(updated)
 
     def _get_json(self, url: str) -> object:
         with urlopen(url, timeout=_HTTP_TIMEOUT_SECONDS) as response:

@@ -39,7 +39,7 @@ async def test_create_session_posts_title_model_and_location() -> None:
     assert len(seen) == 1
     request = seen[0]
     assert request.method == "POST"
-    assert request.url.path == "/session"
+    assert request.url.path == "/api/session"
     assert request.headers["authorization"] == _AUTH
     assert json.loads(request.content) == {
         "title": "demo",
@@ -65,7 +65,7 @@ async def test_prompt_posts_text_to_session_path() -> None:
 
     request = seen[0]
     assert request.method == "POST"
-    assert request.url.path == "/session/ses_1/prompt"
+    assert request.url.path == "/api/session/ses_1/prompt"
     assert request.headers["authorization"] == _AUTH
     assert json.loads(request.content) == {"text": "hello"}
 
@@ -86,7 +86,7 @@ async def test_add_synthetic_posts_text_to_synthetic_path() -> None:
 
     request = seen[0]
     assert request.method == "POST"
-    assert request.url.path == "/session/ses_1/synthetic"
+    assert request.url.path == "/api/session/ses_1/synthetic"
     assert request.headers["authorization"] == _AUTH
     assert json.loads(request.content) == {"text": "context block"}
 
@@ -122,7 +122,7 @@ async def test_interrupt_posts_to_session_path_with_no_body() -> None:
 
     request = seen[0]
     assert request.method == "POST"
-    assert request.url.path == "/session/ses_1/interrupt"
+    assert request.url.path == "/api/session/ses_1/interrupt"
     assert request.headers["authorization"] == _AUTH
     assert request.content == b""
 
@@ -143,7 +143,7 @@ async def test_delete_session_sends_delete_to_session_path() -> None:
 
     request = seen[0]
     assert request.method == "DELETE"
-    assert request.url.path == "/session/ses_1"
+    assert request.url.path == "/api/session/ses_1"
     assert request.headers["authorization"] == _AUTH
 
 
@@ -152,7 +152,7 @@ async def test_messages_returns_unwrapped_list_newest_first() -> None:
 
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "GET"
-        assert request.url.path == "/session/ses_1/message"
+        assert request.url.path == "/api/session/ses_1/message"
         return httpx.Response(200, json={"data": newest_first})
 
     client = _make_client(handler)
@@ -168,8 +168,8 @@ async def test_messages_returns_unwrapped_list_newest_first() -> None:
 async def test_is_active_checks_key_membership() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "GET"
-        assert request.url.path == "/session/active"
-        return httpx.Response(200, json={"data": {"ses_1": {"title": "x"}}})
+        assert request.url.path == "/api/session/active"
+        return httpx.Response(200, json={"data": {"ses_1": {"type": "running"}}})
 
     client = _make_client(handler)
     await client.connect()
@@ -198,7 +198,7 @@ async def test_permission_requests_filters_by_session_id() -> None:
     finally:
         await client.close()
 
-    assert seen[0].url.path == "/permission/request"
+    assert seen[0].url.path == "/api/permission/request"
     assert requests_for_session == [
         {"id": "r1", "sessionID": "ses_1", "action": "edit", "resources": ["a"]}
     ]
@@ -219,9 +219,9 @@ async def test_answer_permission_sends_once_when_allowed() -> None:
     finally:
         await client.close()
 
-    assert seen[0].url.path == "/session/ses_1/permission/r1/reply"
+    assert seen[0].url.path == "/api/session/ses_1/permission/r1/reply"
     assert json.loads(seen[0].content) == {"decision": "once"}
-    assert seen[1].url.path == "/session/ses_1/permission/r2/reply"
+    assert seen[1].url.path == "/api/session/ses_1/permission/r2/reply"
     assert json.loads(seen[1].content) == {"decision": "reject"}
 
 
@@ -239,7 +239,7 @@ async def test_500_raises_oserror_with_status_and_path() -> None:
 
     message = str(exc_info.value)
     assert "500" in message
-    assert "/session/ses_1/prompt" in message
+    assert "/api/session/ses_1/prompt" in message
 
 
 async def test_empty_body_returns_none() -> None:

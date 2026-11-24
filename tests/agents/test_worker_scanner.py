@@ -64,19 +64,25 @@ def test_client_returns_empty_when_server_is_down() -> None:
 
 def test_client_skips_session_with_missing_or_bad_update_time() -> None:
     client = FakeHttpClient(pages={
-        "http://127.0.0.1:4096/session/status": {"s1": {"type": "busy"},
-                                                 "s2": {"type": "busy"},
-                                                 "s3": {"type": "busy"}},
-        "http://127.0.0.1:4096/session": [
-            {"id": "s1", "directory": "E:\\repos\\mods\\CityBuilder",
+        "http://127.0.0.1:4096/api/session/active": {"data": {"s1": {"type": "running"},
+                                                 "s2": {"type": "running"},
+                                                 "s3": {"type": "running"},
+                                                 "s4": {"type": "running"}}},
+        "http://127.0.0.1:4096/api/session": {"data": [
+            {"id": "s1", "location": {"directory": "E:\\repos\\mods\\CityBuilder"},
              "time": {"updated": NOW_MS}},
-            {"id": "s2", "directory": "E:\\repos\\mods\\CityBuilder", "time": {}},
-            {"id": "s3", "directory": "E:\\repos\\mods\\CityBuilder",
+            {"id": "s2", "location": {"directory": "E:\\repos\\mods\\CityBuilder"},
+             "time": {}},
+            {"id": "s3", "location": {"directory": "E:\\repos\\mods\\CityBuilder"},
              "time": {"updated": "soon"}},
-        ],
+            {"id": "s4", "location": {"directory": "E:\\repos\\mods\\CityBuilder"},
+             "time": {"updated": NOW_MS + 0.5}},
+        ]},
     })
     sessions = client.busy_sessions(4096)
     assert sessions == [BusySession(directory="E:\\repos\\mods\\CityBuilder",
+                                    updated_ms=NOW_MS),
+                        BusySession(directory="E:\\repos\\mods\\CityBuilder",
                                     updated_ms=NOW_MS)]
 
 
