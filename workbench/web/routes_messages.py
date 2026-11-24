@@ -55,8 +55,6 @@ class MessagesRoutes:
         self._pane_directory = pane_directory
         self._formatter = PaneMessageFormatter()
         self.routes = APIRouter()
-        self.routes.add_api_route("/api/mods/{name}/messages", self.message,
-                                  methods=["POST"])
         self.routes.add_api_route("/api/mods/{name}/messages", self.messages,
                                   methods=["GET"])
         self.routes.add_api_route("/api/messages", self.workbench_message,
@@ -67,9 +65,6 @@ class MessagesRoutes:
 
     def messages(self, name: str) -> dict[str, object]:
         return self._list(self._registry.require(name).repo)
-
-    def message(self, name: str, body: MessagePost) -> dict[str, object]:
-        return self._post(name, self._registry.require(name).repo, body)
 
     def workbench_messages(self) -> dict[str, object]:
         return self._list(self._require_root())
