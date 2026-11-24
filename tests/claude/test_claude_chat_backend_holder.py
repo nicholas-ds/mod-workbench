@@ -38,3 +38,14 @@ async def test_reader_end_mid_turn_logs_an_error() -> None:
         KIND_ERROR, "The Claude session ended before the turn finished.")
     assert tuple([event async for event in stream]) == ()
     assert not runner.is_running("coder")
+
+
+async def test_reader_failure_reason_reaches_the_error_event() -> None:
+    runner, factory = make_runner(SessionIdStore(None), (make_assistant("hi"),))
+    stream = runner.run("coder", ChatCommand(COMMAND_PROMPT, "hello"))
+    assert await stream.__anext__() == ChatEvent(KIND_TEXT, "hi")
+    factory.clients[0].stream_error = ValueError("JSON message exceeded maximum buffer size")
+    await factory.clients[0].disconnect()
+    error = await stream.__anext__()
+    assert error.kind == KIND_ERROR
+    assert error.text.endswith(": JSON message exceeded maximum buffer size")

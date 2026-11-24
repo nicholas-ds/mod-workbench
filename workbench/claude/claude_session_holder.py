@@ -56,6 +56,7 @@ class ClaudeSessionHolder:
         self._clients: dict[str, ChatClient] = {}
         self._timers: dict[str, asyncio.Task[None]] = {}
         self._readers: dict[str, asyncio.Task[None]] = {}
+        self._failures: dict[str, str] = {}
 
     async def open(self, name: str, permission_callback: CanUseTool) -> ChatClient:
         """Return the open client of the chat, or connect one new client and reader."""
@@ -98,6 +99,10 @@ class ClaudeSessionHolder:
         if not self._has_running_jobs(name):
             await self.close(name)
 
+    def failure_of(self, name: str) -> str:
+        """The reason the reader of the chat died, empty when it did not fail."""
+        return self._failures.get(name, "")
+
     def reader_of(self, name: str) -> asyncio.Task[None] | None:
         return self._readers.get(name)
 
@@ -109,6 +114,7 @@ class ClaudeSessionHolder:
         await client.connect()
         self._clients[name] = client
         self._save_cli_pid(name, client)
+        self._failures.pop(name, None)
         self._start_reader(name, client)
         return client
 
@@ -127,8 +133,8 @@ class ClaudeSessionHolder:
                     self._start_timer(name)
         except asyncio.CancelledError:
             raise
-        except Exception:
-            pass
+        except Exception as error:
+            self._failures[name] = str(error)
         finally:
             await self.close(name)
 

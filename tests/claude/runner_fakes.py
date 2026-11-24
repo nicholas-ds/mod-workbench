@@ -41,6 +41,7 @@ class FakeChatClient:
     def __init__(self, messages: tuple[object, ...] = (), fail: bool = False) -> None:
         self.messages = messages
         self.fail = fail
+        self.stream_error: Exception | None = None
         self.calls: list[str] = []
         self._turn_ready = asyncio.Event()
         self._closed = False
@@ -57,6 +58,8 @@ class FakeChatClient:
     async def receive_messages(self) -> AsyncIterator[object]:
         while True:
             await self._turn_ready.wait()
+            if self.stream_error is not None:
+                raise self.stream_error
             if self._closed:
                 return
             self._turn_ready.clear()

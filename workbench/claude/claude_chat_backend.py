@@ -176,7 +176,9 @@ class ClaudeChatBackend(ChatBackend):
             waits.append(reader)
         await asyncio.wait(waits, return_when=asyncio.FIRST_COMPLETED)
         if not ended.done():
-            raise RuntimeError("The Claude session ended before the turn finished.")
+            reason = self._holder.failure_of(name)
+            detail = f": {reason}" if reason else "."
+            raise RuntimeError(f"The Claude session ended before the turn finished{detail}")
 
     async def _finish_result(self, name: str, message: ResultMessage) -> None:
         self._store.save(name, message.session_id)
