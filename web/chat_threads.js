@@ -1,9 +1,8 @@
 // Per-name chat threads: one thread node per orchestrator name, one shown at a time.
 
-import { AgentsPill } from "./agents_pill.js";
 import { DomBuilder } from "./dom_builder.js";
 import { ScrollAnchor } from "./scroll_anchor.js";
-import { WorkingPill } from "./working_pill.js";
+import { ThreadPills } from "./thread_pills.js";
 
 export class ChatThreads {
   constructor(transcripts, renderer, agents) {
@@ -55,9 +54,8 @@ export class ChatThreads {
 
   _fill(name, thread) {
     const messages = this._renderer.render(this._transcripts.items(name), name);
-    const pill = WorkingPill.trailing(this._transcripts.isRunning(name), name);
-    const agents = AgentsPill.trailing(this._agents.runningAgentsFor(name));
-    thread.replaceChildren(...messages, ...pill, ...agents);
+    const pills = ThreadPills.trailing(this._transcripts.isRunning(name), name, this._agents.runningAgentsFor(name));
+    thread.replaceChildren(...messages, ...pills);
   }
 
   _markNewest(thread) {

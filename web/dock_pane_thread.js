@@ -1,9 +1,8 @@
 // The message thread of a terminal pane: poll its records and render them as dock exchanges.
 
 import { ActivityReader } from "./activity_reader.js";
-import { AgentsPill } from "./agents_pill.js";
 import { PaneTranscriptSource } from "./pane_transcript_source.js";
-import { WorkingPill } from "./working_pill.js";
+import { ThreadPills } from "./thread_pills.js";
 
 export class DockPaneThread {
   constructor(api, render, agents, renderer) {
@@ -18,8 +17,8 @@ export class DockPaneThread {
     try {
       const [data, working] = await Promise.all([this._api.messages(paneMod), this._isWorking(paneMod)]);
       const nodes = this._renderer.render(this._source.items(data.messages), paneMod);
-      const agents = AgentsPill.trailing(this._agents.runningAgentsFor(paneMod));
-      this._render([...nodes, ...WorkingPill.trailing(working, paneMod), ...agents]);
+      const pills = ThreadPills.trailing(working, paneMod, this._agents.runningAgentsFor(paneMod));
+      this._render([...nodes, ...pills]);
     } catch {
       // A failed poll keeps the current thread; only a failed send reports.
     }

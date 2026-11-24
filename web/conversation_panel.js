@@ -3,12 +3,11 @@
 // ChatView (chat tab) and MessageDock (bottom popup) extend this and add only
 // what differs for their surface.
 
-import { AgentsPill } from "./agents_pill.js";
 import { ScrollAnchor } from "./scroll_anchor.js";
 import { ResumeControl } from "./resume_control.js";
 import { SlashCommandsClient } from "./slash_commands_client.js";
 import { SlashPicker } from "./slash_picker.js";
-import { WorkingPill } from "./working_pill.js";
+import { ThreadPills } from "./thread_pills.js";
 
 export class ConversationPanel {
   constructor(session, transcripts) {
@@ -45,9 +44,8 @@ export class ConversationPanel {
   /** The snapshot of `key`: messages plus the trailing working and agents pills. */
   _conversationNodes(key) {
     const nodes = this._renderer.render(this._transcripts.items(key), key);
-    const working = WorkingPill.trailing(this._transcripts.isRunning(key), key);
-    const agents = AgentsPill.trailing(this._agents.runningAgentsFor(key));
-    return [...nodes, ...working, ...agents];
+    const pills = ThreadPills.trailing(this._transcripts.isRunning(key), key, this._agents.runningAgentsFor(key));
+    return [...nodes, ...pills];
   }
 
   /** Called after the draw, before pin and focus: update the surface state. */
