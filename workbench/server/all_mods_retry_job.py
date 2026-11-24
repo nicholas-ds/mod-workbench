@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import anyio.to_thread
 from collections.abc import Awaitable, Callable
 
 from workbench.core.config import ModConfig
@@ -43,5 +44,5 @@ class AllModsRetryJob(BackgroundJob):
     async def run(self) -> None:
         """Run until cancelled: one pass over every mod, then sleep."""
         while True:
-            self.retry_all_once()
+            await anyio.to_thread.run_sync(self.retry_all_once)
             await self._sleep(self._interval_seconds)

@@ -124,3 +124,33 @@ def test_run_loops_until_sleep_is_cancelled(tmp_path: Path) -> None:
 
     assert intervals == [7.5, 7.5]
     assert len(redelivered) == 2
+
+
+async def test_run_does_the_pass_in_a_worker_thread(tmp_path: Path) -> None:
+    """A chat send inside the pass uses anyio.from_thread, which needs a worker thread."""
+    repo_a = tmp_path / "repo-a"
+    _pending_records(repo_a, 1)
+    loops_seen: list[bool] = []
+
+    class LoopProbeDispatcher:
+        def redeliver(self, record: DeliveryRecord) -> DeliveryRecord:
+            try:
+                asyncio.get_running_loop()
+                loops_seen.append(True)
+            except RuntimeError:
+                loops_seen.append(False)
+            return record
+
+    class ProbeFactory:
+        def build(self, cfg: ModConfig) -> NoticeDispatcher:
+            return LoopProbeDispatcher()  # type: ignore[return-value]
+
+    async def stop(seconds: float) -> None:
+        raise asyncio.CancelledError
+
+    job = AllModsRetryJob(FakeRegistry([_config("ModA", repo_a)]), ProbeFactory(),
+                          stop, interval_seconds=1.0)
+    with pytest.raises(asyncio.CancelledError):
+        await job.run()
+
+    assert loops_seen == [False]
