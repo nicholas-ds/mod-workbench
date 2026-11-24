@@ -23,6 +23,7 @@ from workbench.notices.active_loop_filter import ActiveLoopFilter
 from workbench.notices.delivery_view import DeliveryViewBuilder
 from workbench.notices.loop_tracker_factory import LoopTrackerFactory
 from workbench.notices.owner_inbox import OwnerInbox
+from workbench.server.all_mods_ping_job import AllModsPingJob
 from workbench.server.all_mods_retry_job import AllModsRetryJob
 from workbench.server.chat_shutdown_job import ChatShutdownJob
 from workbench.web.routes_loops import LoopRoutes
@@ -149,6 +150,7 @@ class ApiFactory:
         app.state.background_jobs = [
             ChatShutdownJob(stack.resolver),
             AllModsRetryJob(registry, factory, asyncio.sleep),
+            AllModsPingJob(registry, loop_factory, factory, asyncio.sleep),
         ]
         scanner = HandoffScanner(registry, "StarfieldModResearch", OpenRequestReader(),
                                  UnpickedFileFinder(), BoardTextReader(), TrackingTextReader())
